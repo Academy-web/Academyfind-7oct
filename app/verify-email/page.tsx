@@ -84,7 +84,7 @@ function VerifyEmailContent() {
   return (
     <div className="flex flex-col items-center justify-center text-center">
       <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg shadow-amber-500/30 overflow-hidden">
-        <Image src="/logo.png" alt="AcademyFind Logo" width={80} height={80} className="w-16 h-16 object-cover" />
+        <Image src="/logo.png" alt="AcademyFind Logo" width={80} height={80} className="w-16 h-16 object-cover" unoptimized />
       </div>
       
       {status === "loading" && (

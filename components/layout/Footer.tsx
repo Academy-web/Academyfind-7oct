@@ -113,7 +113,8 @@ export function Footer() {
                 src="/favicon-new.png"
                 alt="AcademyFind Logo"
                 width={36}
-                height={36} />
+                height={36}
+                unoptimized />
 
               <div>
                 <h2 className="text-xl font-bold">

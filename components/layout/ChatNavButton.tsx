@@ -5,18 +5,36 @@ import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-const POLL_INTERVAL = 15_000; // 15 seconds
+const POLL_INTERVAL = 60_000; // 60 seconds when active in foreground
+const MIN_FETCH_GAP = 15_000; // Prevents duplicate concurrent fetches (e.g. desktop + mobile nav)
+
+let cachedUnreadCount = 0;
+let lastFetchTime = 0;
 
 export function ChatNavButton({ className = "" }: { className?: string }) {
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(cachedUnreadCount);
   const pathname = usePathname();
 
-  const fetchUnreadCount = useCallback(async () => {
+  const fetchUnreadCount = useCallback(async (force = false) => {
+    // Don't fetch if tab is hidden unless forced
+    if (typeof document !== "undefined" && document.visibilityState === "hidden" && !force) {
+      return;
+    }
+
+    const now = Date.now();
+    if (!force && now - lastFetchTime < MIN_FETCH_GAP) {
+      setUnreadCount(cachedUnreadCount);
+      return;
+    }
+
     try {
+      lastFetchTime = now;
       const res = await fetch("/api/v2/conversations/unread-count");
       if (res.ok) {
         const data = await res.json();
-        setUnreadCount(data.count ?? 0);
+        const count = data.count ?? 0;
+        cachedUnreadCount = count;
+        setUnreadCount(count);
       }
     } catch {
       // Ignore network errors
@@ -25,14 +43,39 @@ export function ChatNavButton({ className = "" }: { className?: string }) {
 
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, POLL_INTERVAL);
-    return () => clearInterval(interval);
+
+    // Poll only when window is active / visible
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        fetchUnreadCount();
+      }
+    }, POLL_INTERVAL);
+
+    // Refresh immediately when user returns to this tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchUnreadCount(true);
+      }
+    };
+
+    const handleFocus = () => {
+      fetchUnreadCount(true);
+    };
+
+    window.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [fetchUnreadCount]);
 
   // When user is viewing /chat, refresh unread count after a moment to clear badge
   useEffect(() => {
     if (pathname.startsWith("/chat")) {
-      const timer = setTimeout(fetchUnreadCount, 1500);
+      const timer = setTimeout(() => fetchUnreadCount(true), 1500);
       return () => clearTimeout(timer);
     }
   }, [pathname, fetchUnreadCount]);

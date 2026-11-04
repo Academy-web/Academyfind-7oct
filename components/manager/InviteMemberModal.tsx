@@ -75,16 +75,16 @@ export function InviteMemberModal({ instituteId }: { instituteId: string }) {
                 <div className="flex items-center gap-4 mt-2">
                     <span className="text-sm font-medium text-slate-700">Role:</span>
                     <div className="flex bg-slate-100 rounded-lg p-1">
-                        <button 
+                        <button
                             type="button"
-                            onClick={() => setRole("TEACHER")} 
+                            onClick={() => setRole("TEACHER")}
                             className={`px-3 py-1 text-sm rounded-md font-medium transition-colors ${role === "TEACHER" ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"}`}
                         >
                             Teacher / Faculty
                         </button>
-                        <button 
+                        <button
                             type="button"
-                            onClick={() => setRole("STUDENT")} 
+                            onClick={() => setRole("STUDENT")}
                             className={`px-3 py-1 text-sm rounded-md font-medium transition-colors ${role === "STUDENT" ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"}`}
                         >
                             Student
@@ -95,7 +95,7 @@ export function InviteMemberModal({ instituteId }: { instituteId: string }) {
                 <form onSubmit={handleSearch} className="flex gap-2 mt-2">
                     <div className="relative flex-1">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <Input 
+                        <Input
                             value={search}
                             onChange={(e) => {
                                 setSearch(e.target.value);
@@ -135,8 +135,8 @@ export function InviteMemberModal({ instituteId }: { instituteId: string }) {
                                     <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1">
                                         <Clock className="w-3.5 h-3.5" /> Pending
                                     </span>
-                                    <Button 
-                                        size="sm" 
+                                    <Button
+                                        size="sm"
                                         className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold px-2.5 h-8"
                                         onClick={() => handleInviteOrAdd(user.id, true)}
                                         disabled={invitingId === user.id}
@@ -146,16 +146,16 @@ export function InviteMemberModal({ instituteId }: { instituteId: string }) {
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                    <Button 
-                                        size="sm" 
+                                    <Button
+                                        size="sm"
                                         className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold px-3 h-8"
                                         onClick={() => handleInviteOrAdd(user.id, true)}
                                         disabled={invitingId === user.id}
                                     >
                                         {invitingId === user.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Add Directly"}
                                     </Button>
-                                    <Button 
-                                        size="sm" 
+                                    <Button
+                                        size="sm"
                                         variant="outline"
                                         className="text-slate-600 hover:text-slate-900 rounded-xl text-xs px-2.5 h-8 border-slate-300"
                                         onClick={() => handleInviteOrAdd(user.id, false)}

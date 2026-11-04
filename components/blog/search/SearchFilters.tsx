@@ -68,9 +68,8 @@ export default function SearchFilters({
           disabled={isPending}
           value={searchParams.get("sort") ?? "relevance"}
           onChange={(e) => updateParam("sort", e.target.value)}
-          className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-amber-500 ${
-            isPending ? "opacity-60 cursor-not-allowed bg-slate-50" : ""
-          }`}
+          className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-amber-500 ${isPending ? "opacity-60 cursor-not-allowed bg-slate-50" : ""
+            }`}
         >
           <option value="relevance">Relevance</option>
           <option value="latest">Latest</option>
@@ -89,9 +88,8 @@ export default function SearchFilters({
           disabled={isPending}
           value={searchParams.get("category") ?? ""}
           onChange={(e) => updateParam("category", e.target.value)}
-          className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-amber-500 ${
-            isPending ? "opacity-60 cursor-not-allowed bg-slate-50" : ""
-          }`}
+          className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-amber-500 ${isPending ? "opacity-60 cursor-not-allowed bg-slate-50" : ""
+            }`}
         >
           <option value="">All Categories</option>
 
@@ -116,9 +114,8 @@ export default function SearchFilters({
           disabled={isPending}
           value={searchParams.get("tag") ?? ""}
           onChange={(e) => updateParam("tag", e.target.value)}
-          className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-amber-500 ${
-            isPending ? "opacity-60 cursor-not-allowed bg-slate-50" : ""
-          }`}
+          className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-amber-500 ${isPending ? "opacity-60 cursor-not-allowed bg-slate-50" : ""
+            }`}
         >
           <option value="">All Tags</option>
 
@@ -140,9 +137,8 @@ export default function SearchFilters({
             router.push(pathname);
           });
         }}
-        className={`w-full rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700 transition hover:bg-slate-100 ${
-          isPending ? "opacity-60 cursor-not-allowed" : ""
-        }`}
+        className={`w-full rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700 transition hover:bg-slate-100 ${isPending ? "opacity-60 cursor-not-allowed" : ""
+          }`}
       >
         Clear Filters
       </button>

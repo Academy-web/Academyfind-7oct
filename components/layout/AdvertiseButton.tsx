@@ -92,6 +92,7 @@ export function AdvertiseButton() {
                     fill
                     className="object-contain"
                     priority
+                    unoptimized
                   />
                 </div>
 

@@ -2,8 +2,11 @@
 import { trackInstituteView, startVisitTracker, updateVisitDuration } from '@/lib/User/manager/track';
 import { useEffect, useRef } from 'react';
 
+const HEARTBEAT_INTERVAL = 45000; // 45 seconds heartbeat instead of 10s
+
 export default function ViewTracker({ instituteId }: { instituteId: string }) {
   const visitIdRef = useRef<string | null>(null);
+  const accumulatedSecondsRef = useRef<number>(0);
 
   useEffect(() => {
     // 1. Existing View Count increment (Legacy)
@@ -18,14 +21,16 @@ export default function ViewTracker({ instituteId }: { instituteId: string }) {
     };
     initDetailedTracking();
 
-    // 3. Heartbeat for time spent (Every 10 seconds)
+    // 3. Heartbeat for time spent (Only when tab is active and visible)
     const heartbeatInterval = setInterval(() => {
-      if (visitIdRef.current) {
-        updateVisitDuration(visitIdRef.current, 10);
+      if (visitIdRef.current && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        updateVisitDuration(visitIdRef.current, 45);
       }
-    }, 10000);
+    }, HEARTBEAT_INTERVAL);
 
-    return () => clearInterval(heartbeatInterval);
+    return () => {
+      clearInterval(heartbeatInterval);
+    };
   }, [instituteId]);
 
   return null;

@@ -213,7 +213,7 @@ export default function Navbar({ session: initialSession }: { session?: any }) {
 
               <div className="flex items-center gap-3 border-b border-slate-100 pb-6 mb-6">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 shadow-xs">
-                  <Image src="/logo.png" alt="AcademyFind Logo" width={22} height={22} />
+                  <Image src="/logo.png" alt="AcademyFind Logo" width={22} height={22} unoptimized />
                 </div>
                 <div>
                   <span className="block text-sm font-extrabold text-slate-800">AcademyFind</span>

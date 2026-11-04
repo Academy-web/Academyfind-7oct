@@ -196,7 +196,7 @@ export async function POST(req: Request) {
                 ? `You are now a registered ${role.toLowerCase()} of ${institute.name}.`
                 : `You have been invited to join ${institute.name} as a ${role.toLowerCase()}.`,
             data: { route: `/institute/${instituteId}` },
-        }).catch(() => {});
+        }).catch(() => { });
 
         // Revalidate paths so teacher profile and institute pages update immediately
         revalidatePath(`/manager/${instituteId}/members`);

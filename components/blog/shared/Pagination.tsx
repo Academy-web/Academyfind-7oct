@@ -116,9 +116,8 @@ export default function Pagination({
             href={getPageUrl(prevPage)}
             onClick={(e) => handlePageClick(e, prevPage)}
             prefetch={false}
-            className={`inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-amber-300 hover:bg-amber-50/50 hover:text-amber-700 active:scale-95 ${
-              isPending ? "pointer-events-none opacity-60" : ""
-            }`}
+            className={`inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-amber-300 hover:bg-amber-50/50 hover:text-amber-700 active:scale-95 ${isPending ? "pointer-events-none opacity-60" : ""
+              }`}
           >
             {isPending && targetPage === prevPage ? (
               <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
@@ -144,13 +143,12 @@ export default function Pagination({
               href={getPageUrl(page)}
               onClick={(e) => handlePageClick(e, page)}
               prefetch={false}
-              className={`relative inline-flex h-10 min-w-10 items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 ${
-                page === currentPage
+              className={`relative inline-flex h-10 min-w-10 items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 ${page === currentPage
                   ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/25 ring-2 ring-amber-400/40"
                   : isPending && targetPage === page
-                  ? "border border-amber-400 bg-amber-50 text-amber-700 ring-2 ring-amber-300/50 animate-pulse"
-                  : "border border-slate-200/90 bg-white text-slate-700 hover:border-amber-400 hover:bg-amber-50/50 hover:text-amber-700 shadow-sm"
-              } ${isPending ? "pointer-events-none" : ""}`}
+                    ? "border border-amber-400 bg-amber-50 text-amber-700 ring-2 ring-amber-300/50 animate-pulse"
+                    : "border border-slate-200/90 bg-white text-slate-700 hover:border-amber-400 hover:bg-amber-50/50 hover:text-amber-700 shadow-sm"
+                } ${isPending ? "pointer-events-none" : ""}`}
             >
               {isPending && targetPage === page ? (
                 <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
@@ -175,9 +173,8 @@ export default function Pagination({
             href={getPageUrl(nextPage)}
             onClick={(e) => handlePageClick(e, nextPage)}
             prefetch={false}
-            className={`inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-amber-300 hover:bg-amber-50/50 hover:text-amber-700 active:scale-95 ${
-              isPending ? "pointer-events-none opacity-60" : ""
-            }`}
+            className={`inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-amber-300 hover:bg-amber-50/50 hover:text-amber-700 active:scale-95 ${isPending ? "pointer-events-none opacity-60" : ""
+              }`}
           >
             <span className="hidden sm:inline">Next</span>
             {isPending && targetPage === nextPage ? (

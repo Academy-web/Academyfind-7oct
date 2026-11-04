@@ -55,7 +55,7 @@ export default function PublicLoading() {
                 alt="AcademyFind Logo"
                 width={28}               // Adjust width and height to fit your logo aspect ratio cleanly
                 height={28}
-                priority                 // Tells Next.js to load this image instantly with highest priority
+                priority unoptimized
                 className="object-contain"
               />
             </div>

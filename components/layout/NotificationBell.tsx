@@ -18,7 +18,11 @@ interface Notification {
   createdAt: string;
 }
 
-const POLL_INTERVAL = 30_000; // 30 seconds
+const POLL_INTERVAL = 60_000; // 60 seconds when active in foreground
+const MIN_FETCH_GAP = 15_000; // Deduplicates concurrent desktop + mobile header fetches
+
+let cachedNotificationCount = 0;
+let lastNotificationFetchTime = 0;
 
 const TYPE_EMOJI: Record<string, string> = {
   SYSTEM: "🔔",
@@ -30,28 +34,65 @@ const TYPE_EMOJI: Record<string, string> = {
 };
 
 export function NotificationBell() {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(cachedNotificationCount);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  // Poll unread count
+  // Poll unread count smartly
   useEffect(() => {
-    const fetchCount = async () => {
+    const fetchCount = async (force = false) => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden" && !force) {
+        return;
+      }
+
+      const now = Date.now();
+      if (!force && now - lastNotificationFetchTime < MIN_FETCH_GAP) {
+        setCount(cachedNotificationCount);
+        return;
+      }
+
       try {
+        lastNotificationFetchTime = now;
         const res = await fetch("/api/v2/notifications/unread-count");
         if (res.ok) {
           const data = await res.json();
-          setCount(data.count ?? 0);
+          const unread = data.count ?? 0;
+          cachedNotificationCount = unread;
+          setCount(unread);
         }
       } catch {
         // ignore network errors
       }
     };
+
     fetchCount();
-    const interval = setInterval(fetchCount, POLL_INTERVAL);
-    return () => clearInterval(interval);
+
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        fetchCount();
+      }
+    }, POLL_INTERVAL);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchCount(true);
+      }
+    };
+
+    const handleFocus = () => {
+      fetchCount(true);
+    };
+
+    window.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
 
   // Load notifications when popover opens

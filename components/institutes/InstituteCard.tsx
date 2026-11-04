@@ -226,7 +226,7 @@ export default function InstituteCard({
           //   />
         ) : (
           <div className="flex h-full items-center justify-center bg-muted">
-            <Image src={getFallBackImage(category || "")} alt="No Image" width={400} height={400} />
+            <Image src={getFallBackImage(category || "")} alt="No Image" width={400} height={400} unoptimized />
           </div>
         )}
 

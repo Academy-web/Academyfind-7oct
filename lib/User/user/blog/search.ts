@@ -94,8 +94,8 @@ export async function searchBlogPosts({
       posts: results.hits.map((hit: BlogSearchDocument) => ({
         ...hit,
         publishedAt: hit.publishedAt
-            ? new Date(hit.publishedAt)
-            : null,
+          ? new Date(hit.publishedAt)
+          : null,
       })),
 
       total: results.estimatedTotalHits ?? 0,
@@ -249,121 +249,121 @@ export async function searchBlogPosts({
       const coreTokens = rawTokens.filter((t) => !GENERIC_MODIFIERS.has(t) && t.length > 1);
       const searchTokens = coreTokens.length > 0 ? coreTokens : rawTokens;
 
-        const scoredPosts: { post: any; score: number }[] = [];
+      const scoredPosts: { post: any; score: number }[] = [];
 
-        for (const post of dbPosts) {
-          let score = 0;
-          const title = post.title || "";
-          const excerpt = post.excerpt || "";
-          const categoryName = post.category?.name || "";
-          const tagNames = post.tags?.map((t: any) => t.tag?.name).filter(Boolean) || [];
+      for (const post of dbPosts) {
+        let score = 0;
+        const title = post.title || "";
+        const excerpt = post.excerpt || "";
+        const categoryName = post.category?.name || "";
+        const tagNames = post.tags?.map((t: any) => t.tag?.name).filter(Boolean) || [];
 
-          // 1. Exact phrase matching in title / excerpt (Highest priority)
-          if (hasPhraseMatch(title, q)) {
-            score += 50;
-          } else if (hasPhraseMatch(excerpt, q)) {
+        // 1. Exact phrase matching in title / excerpt (Highest priority)
+        if (hasPhraseMatch(title, q)) {
+          score += 50;
+        } else if (hasPhraseMatch(excerpt, q)) {
+          score += 25;
+        }
+
+        // 2. Category & Tag exact phrase match
+        if (hasPhraseMatch(categoryName, q)) {
+          score += 30;
+        }
+        for (const tag of tagNames) {
+          if (hasPhraseMatch(tag, q)) {
             score += 25;
+            break;
+          }
+        }
+
+        // 3. Whole-word token matching (Never match substrings in unrelated words like 'guidance' or 'avoidance')
+        let matchedCoreTokensCount = 0;
+        for (const token of searchTokens) {
+          let tokenMatched = false;
+
+          const inTitle = countWholeWordMatches(title, token);
+          if (inTitle > 0) {
+            tokenMatched = true;
+            score += Math.min(inTitle * 20, 40);
           }
 
-          // 2. Category & Tag exact phrase match
-          if (hasPhraseMatch(categoryName, q)) {
-            score += 30;
+          const inExcerpt = countWholeWordMatches(excerpt, token);
+          if (inExcerpt > 0) {
+            tokenMatched = true;
+            score += Math.min(inExcerpt * 10, 20);
           }
+
           for (const tag of tagNames) {
-            if (hasPhraseMatch(tag, q)) {
-              score += 25;
+            if (countWholeWordMatches(tag, token) > 0) {
+              tokenMatched = true;
+              score += 15;
               break;
             }
           }
 
-          // 3. Whole-word token matching (Never match substrings in unrelated words like 'guidance' or 'avoidance')
-          let matchedCoreTokensCount = 0;
-          for (const token of searchTokens) {
-            let tokenMatched = false;
-
-            const inTitle = countWholeWordMatches(title, token);
-            if (inTitle > 0) {
-              tokenMatched = true;
-              score += Math.min(inTitle * 20, 40);
-            }
-
-            const inExcerpt = countWholeWordMatches(excerpt, token);
-            if (inExcerpt > 0) {
-              tokenMatched = true;
-              score += Math.min(inExcerpt * 10, 20);
-            }
-
-            for (const tag of tagNames) {
-              if (countWholeWordMatches(tag, token) > 0) {
-                tokenMatched = true;
-                score += 15;
-                break;
-              }
-            }
-
-            if (countWholeWordMatches(categoryName, token) > 0) {
-              tokenMatched = true;
-              score += 15;
-            }
-
-            if (tokenMatched) {
-              matchedCoreTokensCount++;
-            }
+          if (countWholeWordMatches(categoryName, token) > 0) {
+            tokenMatched = true;
+            score += 15;
           }
 
-          // Reward matching all query tokens
-          if (searchTokens.length > 1 && matchedCoreTokensCount === searchTokens.length) {
-            score += 20;
-          }
-
-          // MANDATORY RELEVANCE FILTER:
-          // Must match at least one search token as a whole word, and have a positive relevance score
-          if (score > 0 && matchedCoreTokensCount > 0) {
-            scoredPosts.push({ post, score });
+          if (tokenMatched) {
+            matchedCoreTokensCount++;
           }
         }
 
-        // Apply sorting to scored posts
-        if (sort === "latest") {
-          scoredPosts.sort((a, b) => {
-            const timeA = a.post.publishedAt?.getTime() ?? 0;
-            const timeB = b.post.publishedAt?.getTime() ?? 0;
-            if (timeB !== timeA) return timeB - timeA;
-            return b.post.id.localeCompare(a.post.id);
-          });
-        } else if (sort === "oldest") {
-          scoredPosts.sort((a, b) => {
-            const timeA = a.post.publishedAt?.getTime() ?? 0;
-            const timeB = b.post.publishedAt?.getTime() ?? 0;
-            if (timeA !== timeB) return timeA - timeB;
-            return a.post.id.localeCompare(b.post.id);
-          });
-        } else if (sort === "popular") {
-          scoredPosts.sort((a, b) => {
-            if (b.post.viewCount !== a.post.viewCount) return b.post.viewCount - a.post.viewCount;
-            const timeA = a.post.publishedAt?.getTime() ?? 0;
-            const timeB = b.post.publishedAt?.getTime() ?? 0;
-            if (timeB !== timeA) return timeB - timeA;
-            return b.post.id.localeCompare(a.post.id);
-          });
-        } else {
-          // default: "relevance"
-          scoredPosts.sort((a, b) => {
-            if (b.score !== a.score) {
-              return b.score - a.score;
-            }
-            const timeA = a.post.publishedAt?.getTime() ?? 0;
-            const timeB = b.post.publishedAt?.getTime() ?? 0;
-            if (timeB !== timeA) return timeB - timeA;
-            return b.post.id.localeCompare(a.post.id);
-          });
+        // Reward matching all query tokens
+        if (searchTokens.length > 1 && matchedCoreTokensCount === searchTokens.length) {
+          score += 20;
         }
 
-        rankedPosts = scoredPosts.map((sp) => sp.post);
+        // MANDATORY RELEVANCE FILTER:
+        // Must match at least one search token as a whole word, and have a positive relevance score
+        if (score > 0 && matchedCoreTokensCount > 0) {
+          scoredPosts.push({ post, score });
+        }
+      }
 
-        const total = rankedPosts.length;
-        const paginatedPosts = rankedPosts.slice(skip, skip + limit);
-        const totalPages = Math.ceil(total / limit) || 1;
+      // Apply sorting to scored posts
+      if (sort === "latest") {
+        scoredPosts.sort((a, b) => {
+          const timeA = a.post.publishedAt?.getTime() ?? 0;
+          const timeB = b.post.publishedAt?.getTime() ?? 0;
+          if (timeB !== timeA) return timeB - timeA;
+          return b.post.id.localeCompare(a.post.id);
+        });
+      } else if (sort === "oldest") {
+        scoredPosts.sort((a, b) => {
+          const timeA = a.post.publishedAt?.getTime() ?? 0;
+          const timeB = b.post.publishedAt?.getTime() ?? 0;
+          if (timeA !== timeB) return timeA - timeB;
+          return a.post.id.localeCompare(b.post.id);
+        });
+      } else if (sort === "popular") {
+        scoredPosts.sort((a, b) => {
+          if (b.post.viewCount !== a.post.viewCount) return b.post.viewCount - a.post.viewCount;
+          const timeA = a.post.publishedAt?.getTime() ?? 0;
+          const timeB = b.post.publishedAt?.getTime() ?? 0;
+          if (timeB !== timeA) return timeB - timeA;
+          return b.post.id.localeCompare(a.post.id);
+        });
+      } else {
+        // default: "relevance"
+        scoredPosts.sort((a, b) => {
+          if (b.score !== a.score) {
+            return b.score - a.score;
+          }
+          const timeA = a.post.publishedAt?.getTime() ?? 0;
+          const timeB = b.post.publishedAt?.getTime() ?? 0;
+          if (timeB !== timeA) return timeB - timeA;
+          return b.post.id.localeCompare(a.post.id);
+        });
+      }
+
+      rankedPosts = scoredPosts.map((sp) => sp.post);
+
+      const total = rankedPosts.length;
+      const paginatedPosts = rankedPosts.slice(skip, skip + limit);
+      const totalPages = Math.ceil(total / limit) || 1;
 
       return {
         posts: paginatedPosts,
