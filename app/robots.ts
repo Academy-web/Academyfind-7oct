@@ -57,11 +57,6 @@ export default function robots(): MetadataRoute.Robots {
       crawlDelay: 30
     }
     ],
-    sitemap: [
-      `${baseUrl}/sitemap.xml`,
-      `${baseUrl}/sitemap-categories-city.xml`,
-      `${baseUrl}/sitemap-blogs.xml`,
-      `${baseUrl}/sitemap-static.xml`,
-    ],
+    sitemap: `${baseUrl}/sitemap.xml`,
   }
 }

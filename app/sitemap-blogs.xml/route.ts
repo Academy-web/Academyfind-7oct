@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://academyfind.com';

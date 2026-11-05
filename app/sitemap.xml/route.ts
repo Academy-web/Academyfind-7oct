@@ -1,13 +1,33 @@
 import { prisma } from '@/lib/prisma';
 
+export const revalidate = 86400; // Cache sitemap index for 24 hours
+
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://academyfind.com';
-  const today = new Date().toISOString();
 
-  const totalInstitutes = await prisma.institute.count({
-    where: { isActive: true, isPublished: true } 
-  });
+  const [totalInstitutes, latestInstitute, latestBlog] = await Promise.all([
+    prisma.institute.count({
+      where: { isActive: true, isPublished: true } 
+    }),
+    prisma.institute.findFirst({
+      where: { isActive: true, isPublished: true },
+      orderBy: { updatedAt: 'desc' },
+      select: { updatedAt: true }
+    }),
+    prisma.blogPost.findFirst({
+      where: { status: 'PUBLISHED' },
+      orderBy: { updatedAt: 'desc' },
+      select: { updatedAt: true }
+    })
+  ]);
   
+  const instituteLastmod = latestInstitute?.updatedAt 
+    ? latestInstitute.updatedAt.toISOString() 
+    : undefined;
+  const blogLastmod = latestBlog?.updatedAt 
+    ? latestBlog.updatedAt.toISOString() 
+    : undefined;
+
   const limit = 6000; 
   const totalPages = Math.ceil(totalInstitutes / limit);
 
@@ -15,8 +35,7 @@ export async function GET() {
   for (let i = 0; i < totalPages; i++) {
     instituteSitemaps += `
   <sitemap>
-    <loc>${baseUrl}/sitemap-institutes/${i}</loc>
-    <lastmod>${today}</lastmod>
+    <loc>${baseUrl}/sitemap-institutes/${i}</loc>${instituteLastmod ? `\n    <lastmod>${instituteLastmod}</lastmod>` : ''}
   </sitemap>`;
   }
 
@@ -24,15 +43,12 @@ export async function GET() {
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>${baseUrl}/sitemap-static.xml</loc>
-    <lastmod>${today}</lastmod>
   </sitemap>
   <sitemap>
     <loc>${baseUrl}/sitemap-categories-city.xml</loc>
-    <lastmod>${today}</lastmod>
   </sitemap>
   <sitemap>
-    <loc>${baseUrl}/sitemap-blogs.xml</loc>
-    <lastmod>${today}</lastmod>
+    <loc>${baseUrl}/sitemap-blogs.xml</loc>${blogLastmod ? `\n    <lastmod>${blogLastmod}</lastmod>` : ''}
   </sitemap>
   ${instituteSitemaps}
 </sitemapindex>`;

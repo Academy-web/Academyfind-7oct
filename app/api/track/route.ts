@@ -21,16 +21,22 @@ export async function POST(req: NextRequest) {
       isNewVisitor = true;
     }
 
-    // 2. Extract Demographics from Vercel Headers
-    const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'Unknown';
-    let city = req.headers.get('x-vercel-ip-city') || 'Unknown City';
+    // 2. Extract Demographics (Cloudflare & Vercel supported)
+    const ipAddress = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'Unknown';
+    let city = req.headers.get('cf-ipcity') || req.headers.get('x-vercel-ip-city') || 'Unknown City';
     try { city = decodeURIComponent(city); } catch(e) {}
     
-    const country = req.headers.get('x-vercel-ip-country') || 'Unknown Country';
+    let country = req.headers.get('cf-ipcountry') || req.headers.get('x-vercel-ip-country') || 'Unknown Country';
+    if (country === 'IN') country = 'India';
+    else if (country === 'SG') country = 'Singapore';
+    else if (country === 'US') country = 'United States';
+    else if (country === 'AE') country = 'United Arab Emirates';
+    else if (country === 'GB') country = 'United Kingdom';
     const userAgent = req.headers.get('user-agent') || 'Unknown';
 
-    // Ignore bot traffic (including social media scrapers from ads)
-    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider|headless|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|Instagram|TelegramBot|Discordbot/i.test(userAgent);
+    // Ignore bot traffic (including automated scrapers, headless browsers, search bots)
+    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider|headless|phantom|selenium|puppeteer|playwright|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|Instagram|TelegramBot|Discordbot/i.test(userAgent)
+      || req.headers.get('cf-worker') !== null;
     if (isBot) {
       return NextResponse.json({ success: true, message: 'Bot traffic ignored' });
     }
