@@ -16,6 +16,7 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script_stop: true
+          command_timeout: 30m
           script: |
             cd /var/www/academyfind
             git pull origin main

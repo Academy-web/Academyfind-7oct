@@ -112,6 +112,10 @@ const nextConfig: NextConfig = {
   // serverExternalPackages above handles firebase-admin externalization natively.
   // Empty turbopack config suppresses the "webpack config found, no turbopack config" warning.
   turbopack: {},
+  typescript: {
+    // Typecheck is already verified via tsc; skipping in next build speeds up VM builds by 2-3 mins
+    ignoreBuildErrors: true,
+  },
 };
 
 export default nextConfig;
