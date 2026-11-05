@@ -44,6 +44,7 @@ import { UnlockContactButton } from "@/components/institutes/UnlockContactButton
 import { UnlockBasicFeaturesOverlay } from "@/components/institutes/UnlockBasicFeaturesOverlay";
 import { VerifiedBadge } from "@/components/institutes/VerifiedBadge";
 import { NoticeBoardSection } from "@/components/notices/NoticeBoardSection";
+import { OtherCentersSection } from "@/components/institutes/OtherCentersSection";
 
 export const revalidate = 3600; // ISR: cache pages for 1 hour — critical for Googlebot TTFB
 
@@ -180,6 +181,7 @@ export default async function InstitutePage({ params }: PageProps) {
     userBatchIds,
     publicNotices,
     totalPublicNotices,
+    hubMemberships,
   ] = await Promise.all([
     userId
       ? prisma.instituteMembership.findMany({
@@ -350,7 +352,78 @@ export default async function InstitutePage({ params }: PageProps) {
           }
         })
       : Promise.resolve(0),
+    prisma.instituteHubMember.findMany({
+      where: { instituteId: id },
+      include: {
+        hub: {
+          include: {
+            institutes: {
+              where: {
+                instituteId: { not: id },
+                institute: { isActive: true, isPublished: true },
+              },
+              include: {
+                institute: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    logo: true,
+                    imageUrl: true,
+                    address: true,
+                    googleRating: true,
+                    googleReviewCount: true,
+                    isVerified: true,
+                    city: { select: { name: true } },
+                    categories: {
+                      take: 1,
+                      select: { category: { select: { name: true } } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
   ]);
+
+  // Sibling centers from all connected hubs
+  const hubNames: string[] = [];
+  const siblingMap = new Map<string, any>();
+
+  hubMemberships.forEach((hm: any) => {
+    if (hm.hub?.name && !hubNames.includes(hm.hub.name)) {
+      hubNames.push(hm.hub.name);
+    }
+    hm.hub?.institutes?.forEach((member: any) => {
+      const inst = member.institute;
+      if (inst && inst.id !== id && !siblingMap.has(inst.id)) {
+        siblingMap.set(inst.id, {
+          id: inst.id,
+          name: inst.name,
+          slug: inst.slug,
+          logo: inst.logo,
+          imageUrl: inst.imageUrl,
+          address: inst.address,
+          googleRating: inst.googleRating,
+          googleReviewCount: inst.googleReviewCount,
+          isVerified: inst.isVerified,
+          cityName: inst.city?.name || "Branch Center",
+          categoryName: inst.categories?.[0]?.category?.name,
+          hubNames: [hm.hub.name],
+        });
+      } else if (inst && siblingMap.has(inst.id)) {
+        const existing = siblingMap.get(inst.id)!;
+        if (!existing.hubNames.includes(hm.hub.name)) {
+          existing.hubNames.push(hm.hub.name);
+        }
+      }
+    });
+  });
+
+  const siblingCenters = Array.from(siblingMap.values());
 
   const formattedBlogs: BlogCardPost[] = recentBlogs.map((blog: any) => ({
     ...blog,
@@ -1650,6 +1723,13 @@ export default async function InstitutePage({ params }: PageProps) {
             <ReviewForm instituteId={institute.id} isLoggedIn={!!userId} />
           </div>
         </section>
+
+        {/* 🚀 OTHER CENTERS / HUB NETWORK */}
+        <OtherCentersSection
+          currentInstituteName={institute.name}
+          centers={siblingCenters}
+          hubNames={hubNames}
+        />
 
         {/* SIMILAR INSTITUTES */}
         {similarInstitutes.length > 0 && (

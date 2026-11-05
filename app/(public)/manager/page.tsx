@@ -6,6 +6,7 @@ import { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { HubSectionManager } from "@/components/hubs/HubSectionManager";
 
 export const metadata: Metadata = {
   title: "Manager Control Panel | AcademyFind",
@@ -24,7 +25,7 @@ export default async function ManagerRootPage() {
         redirect('/login');
     }
 
-    if (session.user.role !== "INSTITUTE_MANAGER") {
+    if (session.user.role !== "INSTITUTE_MANAGER" && session.user.role !== "ADMIN") {
         redirect('/');
     }
 
@@ -42,7 +43,7 @@ export default async function ManagerRootPage() {
         }
     })
 
-    if (managedInstitutes.length === 0) {
+    if (managedInstitutes.length === 0 && session.user.role !== "ADMIN") {
         return (
             <div className="min-h-[60vh] flex items-center justify-center p-4">
                 <Card className="max-w-md w-full text-center p-6 border-dashed shadow-sm">
@@ -64,6 +65,51 @@ export default async function ManagerRootPage() {
     // 🚀 ALAG ALAG LISTS BANAYI HAIN
     const activeInstitutes = managedInstitutes.filter(m => m.institute.isActive);
     const pendingInstitutes = managedInstitutes.filter(m => !m.institute.isActive);
+
+    const managedInstituteIds = managedInstitutes.map((m) => m.institute.id);
+
+    // Fetch hubs created by this manager or where their institutes belong
+    const hubs = await prisma.instituteHub.findMany({
+        where: {
+            OR: [
+                { createdById: session.user.id },
+                {
+                    institutes: {
+                        some: {
+                            instituteId: { in: managedInstituteIds }
+                        }
+                    }
+                }
+            ]
+        },
+        include: {
+            institutes: {
+                include: {
+                    institute: {
+                        select: {
+                            id: true,
+                            name: true,
+                            slug: true,
+                            logo: true,
+                            imageUrl: true,
+                            city: { select: { name: true } }
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: { updatedAt: "desc" }
+    });
+
+    const managedOptions = managedInstitutes.map((m) => ({
+        id: m.institute.id,
+        name: m.institute.name,
+        slug: m.institute.slug,
+        logo: m.institute.logo,
+        imageUrl: m.institute.imageUrl,
+        cityName: m.institute.city?.name || "Unknown City",
+        isActive: m.institute.isActive,
+    }));
 
     return (
         <div className="container mx-auto max-w-5xl py-12 px-4 space-y-12">
@@ -93,7 +139,7 @@ export default async function ManagerRootPage() {
                                     <CardContent>
                                         <div className="flex items-center text-xs text-slate-500 mb-4">
                                             <MapPin className="w-3.5 h-3.5 mr-1" />
-                                            {institute.city.name}
+                                            {institute.city?.name}
                                         </div>
                                         <div className="flex items-center text-sm font-semibold text-blue-600">
                                             Manage Profile <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
@@ -105,6 +151,15 @@ export default async function ManagerRootPage() {
                     </div>
                 </div>
             )}
+
+            {/* 🟡 NETWORK HUBS & CENTERS */}
+            <div className="border-t border-slate-200 pt-10">
+                <HubSectionManager
+                    hubs={hubs}
+                    managedInstitutes={managedOptions}
+                    currentUserId={session.user.id}
+                />
+            </div>
 
             {/* 🟠 UNDER VERIFICATION SECTION */}
             {pendingInstitutes.length > 0 && (
@@ -118,7 +173,6 @@ export default async function ManagerRootPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {pendingInstitutes.map(({ institute }) => (
-                            // 🚀 DHYAN DEIN: Yahan Link tag NAHI hai. Click disabled hai.
                             <Card key={institute.id} className="h-full rounded-2xl border-slate-200 bg-slate-50/50 cursor-not-allowed opacity-90 relative overflow-hidden">
                                 
                                 {/* Overlay pattern for locked feel */}
@@ -137,7 +191,7 @@ export default async function ManagerRootPage() {
                                 <CardContent className="relative z-10">
                                     <div className="flex items-center text-xs text-slate-400 mb-4">
                                         <MapPin className="w-3.5 h-3.5 mr-1" />
-                                        {institute.city.name}
+                                        {institute.city?.name}
                                     </div>
                                     <div className="flex items-center text-xs font-semibold text-slate-400">
                                         Access Locked until verified

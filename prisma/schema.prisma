@@ -8,106 +8,107 @@ datasource db {
 }
 
 model User {
-  id                       String                    @id @default(cuid())
-  name                     String?
-  username                 String                    @unique
-  email                    String                    @unique
-  phone                    String?
-  passwordHash             String?
-  image                    String?
-  coverImage               String?
-  role                     Role                      @default(USER)
-  isActive                 Boolean                   @default(true)
-  emailVerified            Boolean                   @default(false)
-  phoneVerified            Boolean                   @default(false)
-  onboardingCompleted      Boolean                   @default(false)
-  lastLoginAt              DateTime?
-  pushToken                String?
-  createdAt                DateTime                  @default(now())
-  updatedAt                DateTime                  @updatedAt
-  canAddInstitute          Boolean                   @default(true)
-  canWriteBlogs            Boolean                   @default(true)
-  managedInstitutes        InstituteManager[]
-  facebookUrl              String?
-  instagramUrl             String?
-  telegramUrl              String?
-  twitterUrl               String?
-  youtubeUrl               String?
-  linkedinUrl              String?
-  whatsappUrl              String?
-  reviews                  Review[]
-  accounts                 Account[]
-  adminNotifications       AdminNotification[]
-  communityAnswers         CommunityAnswer[]
-  communityQuestions       CommunityQuestion[]
-  claims                   InstituteClaim[]
-  instituteRequests        InstituteRequest[]
-  salesAssignments         SalesAssignment[]         @relation("SalesAssignments")
-  salesCategoryAssignments SalesCategoryAssignment[] @relation("SalesCategoryAssignments")
-  salesAreaAssignments     SalesAreaAssignment[]     @relation("SalesAreaAssignments")
-  salesEnquiryAssignments  InstituteEnquiry[]        @relation("SalesEnquiryAssignments")
-  salesLifeCoachAssignments LifeCoachRequest[]       @relation("SalesLifeCoachAssignments")
-  salesRequests            SalesAssignmentRequest[]  @relation("SalesAssignmentRequests")
-  reviewedSalesRequests    SalesAssignmentRequest[]  @relation("ReviewedSalesRequests")
-  ismAssignments           InstituteSalesManagerAssignment[] @relation("IsmAssignments")
-  ismAssignedBy            InstituteSalesManagerAssignment[] @relation("IsmAssignedBy")
-  ismLeadAssignments       InstituteEnquiry[]        @relation("IsmEnquiryAssignments")
-  ismActivities            IsmLeadActivity[]         @relation("IsmActivities")
-  ismAdmissions            AdmissionRecord[]         @relation("IsmAdmissions")
-  ismInvitesReceived       IsmInviteRequest[]        @relation("IsmInvites")
-  ismInvitesSent           IsmInviteRequest[]        @relation("IsmInvitesSent")
-  sessions                 Session[]
-  payments                 SubscriptionPayment[]
-  instituteUnlocks         InstituteUnlock[]
-  compareLists             UserCompareList[]
-  viewHistory              UserHistory[]
-  shortlisted              UserShortlist[]
-  distributionLogs         LeadDistributionLog[]     @relation("AdminDistributionLogs")
-  blogAuthorProfile        BlogAuthorProfile?
-  blogComments             BlogComment[]
-  blogReactions            BlogReaction[]
-  blogViews                BlogView[]                @relation("UserBlogViews")
-  blogBookmarks            BlogBookmark[]            @relation("UserBookmarks")
-  followedAuthors          BlogAuthorFollower[]      @relation("UserFollowedAuthors")
-  reviewedPosts            BlogPost[]                @relation("PostReviewer")
-  publishedPosts           BlogPost[]                @relation("PostPublisher")
-  editedPosts              BlogPost[]                @relation("PostEditor")
-  blogRevisions            BlogRevision[]            @relation("RevisionAuthor")
-  reviewReplies            ReviewReply[]
-  visitorSessions          VisitorSession[]
-  blogReports              BlogReport[]
-  resolvedBlogReports      BlogReport[]              @relation("ResolvedBlogReports")
-  studentProfile           StudentProfile?
-  teacherProfile           TeacherProfile?
-  memberships              InstituteMembership[]
-  chatSettings             ChatSettings?
-  conversationParticipants ConversationParticipant[]
-  messages                 Message[]
-  contactMessages          ContactMessage[]          @relation("UserContactMessages")
-  messageReads             MessageRead[]
-  messageReactions         MessageReaction[]
-  messageReports           MessageReport[]           @relation("Reporter")
-  resolvedMessageReports   MessageReport[]           @relation("Resolver")
-  blockedUsers             UserBlock[]               @relation("UserBlocks")
-  blockedByUsers           UserBlock[]               @relation("BlockedUsers")
-  createdConversations     Conversation[]
-  notifications            UserNotification[]
-  wallet                   UserWallet?
-  reputation               UserReputation?
-  preferences              UserPreference?
-  allowDms                 Boolean                   @default(true)
-  educations               UserEducation[]
-  experiences              UserExperience[]
-  achievements             UserAchievement[]
-  skills                   UserSkill[]
-  instituteVisits          InstituteVisit[]
-  isVisible                Boolean                   @default(true)
-  advertisements           Advertisement[]
-  buddyRequestsSent        BuddyRequest[]            @relation("BuddyRequestsSent")
-  buddyRequestsReceived    BuddyRequest[]            @relation("BuddyRequestsReceived")
-  bookListings             BookListing[]             @relation("SellerBookListings")
-  acquiredBooks            BookListing[]             @relation("BuyerBookListings")
-  authoredNotices          InstituteNotice[]         @relation("NoticeAuthor")
+  id                        String                            @id @default(cuid())
+  name                      String?
+  username                  String                            @unique
+  email                     String                            @unique
+  phone                     String?
+  passwordHash              String?
+  image                     String?
+  coverImage                String?
+  role                      Role                              @default(USER)
+  isActive                  Boolean                           @default(true)
+  emailVerified             Boolean                           @default(false)
+  phoneVerified             Boolean                           @default(false)
+  onboardingCompleted       Boolean                           @default(false)
+  lastLoginAt               DateTime?
+  pushToken                 String?
+  createdAt                 DateTime                          @default(now())
+  updatedAt                 DateTime                          @updatedAt
+  canAddInstitute           Boolean                           @default(true)
+  canWriteBlogs             Boolean                           @default(true)
+  managedInstitutes         InstituteManager[]
+  facebookUrl               String?
+  instagramUrl              String?
+  telegramUrl               String?
+  twitterUrl                String?
+  youtubeUrl                String?
+  linkedinUrl               String?
+  whatsappUrl               String?
+  reviews                   Review[]
+  accounts                  Account[]
+  adminNotifications        AdminNotification[]
+  communityAnswers          CommunityAnswer[]
+  communityQuestions        CommunityQuestion[]
+  claims                    InstituteClaim[]
+  instituteRequests         InstituteRequest[]
+  salesAssignments          SalesAssignment[]                 @relation("SalesAssignments")
+  salesCategoryAssignments  SalesCategoryAssignment[]         @relation("SalesCategoryAssignments")
+  salesAreaAssignments      SalesAreaAssignment[]             @relation("SalesAreaAssignments")
+  salesEnquiryAssignments   InstituteEnquiry[]                @relation("SalesEnquiryAssignments")
+  salesLifeCoachAssignments LifeCoachRequest[]                @relation("SalesLifeCoachAssignments")
+  salesRequests             SalesAssignmentRequest[]          @relation("SalesAssignmentRequests")
+  reviewedSalesRequests     SalesAssignmentRequest[]          @relation("ReviewedSalesRequests")
+  ismAssignments            InstituteSalesManagerAssignment[] @relation("IsmAssignments")
+  ismAssignedBy             InstituteSalesManagerAssignment[] @relation("IsmAssignedBy")
+  ismLeadAssignments        InstituteEnquiry[]                @relation("IsmEnquiryAssignments")
+  ismActivities             IsmLeadActivity[]                 @relation("IsmActivities")
+  ismAdmissions             AdmissionRecord[]                 @relation("IsmAdmissions")
+  ismInvitesReceived        IsmInviteRequest[]                @relation("IsmInvites")
+  ismInvitesSent            IsmInviteRequest[]                @relation("IsmInvitesSent")
+  sessions                  Session[]
+  payments                  SubscriptionPayment[]
+  instituteUnlocks          InstituteUnlock[]
+  compareLists              UserCompareList[]
+  viewHistory               UserHistory[]
+  shortlisted               UserShortlist[]
+  distributionLogs          LeadDistributionLog[]             @relation("AdminDistributionLogs")
+  blogAuthorProfile         BlogAuthorProfile?
+  blogComments              BlogComment[]
+  blogReactions             BlogReaction[]
+  blogViews                 BlogView[]                        @relation("UserBlogViews")
+  blogBookmarks             BlogBookmark[]                    @relation("UserBookmarks")
+  followedAuthors           BlogAuthorFollower[]              @relation("UserFollowedAuthors")
+  reviewedPosts             BlogPost[]                        @relation("PostReviewer")
+  publishedPosts            BlogPost[]                        @relation("PostPublisher")
+  editedPosts               BlogPost[]                        @relation("PostEditor")
+  blogRevisions             BlogRevision[]                    @relation("RevisionAuthor")
+  reviewReplies             ReviewReply[]
+  visitorSessions           VisitorSession[]
+  blogReports               BlogReport[]
+  resolvedBlogReports       BlogReport[]                      @relation("ResolvedBlogReports")
+  studentProfile            StudentProfile?
+  teacherProfile            TeacherProfile?
+  memberships               InstituteMembership[]
+  chatSettings              ChatSettings?
+  conversationParticipants  ConversationParticipant[]
+  messages                  Message[]
+  contactMessages           ContactMessage[]                  @relation("UserContactMessages")
+  messageReads              MessageRead[]
+  messageReactions          MessageReaction[]
+  messageReports            MessageReport[]                   @relation("Reporter")
+  resolvedMessageReports    MessageReport[]                   @relation("Resolver")
+  blockedUsers              UserBlock[]                       @relation("UserBlocks")
+  blockedByUsers            UserBlock[]                       @relation("BlockedUsers")
+  createdConversations      Conversation[]
+  notifications             UserNotification[]
+  wallet                    UserWallet?
+  reputation                UserReputation?
+  preferences               UserPreference?
+  allowDms                  Boolean                           @default(true)
+  educations                UserEducation[]
+  experiences               UserExperience[]
+  achievements              UserAchievement[]
+  skills                    UserSkill[]
+  instituteVisits           InstituteVisit[]
+  isVisible                 Boolean                           @default(true)
+  advertisements            Advertisement[]
+  buddyRequestsSent         BuddyRequest[]                    @relation("BuddyRequestsSent")
+  buddyRequestsReceived     BuddyRequest[]                    @relation("BuddyRequestsReceived")
+  bookListings              BookListing[]                     @relation("SellerBookListings")
+  acquiredBooks             BookListing[]                     @relation("BuyerBookListings")
+  authoredNotices           InstituteNotice[]                 @relation("NoticeAuthor")
+  createdHubs               InstituteHub[]                    @relation("HubCreator")
 
   @@map("user")
 }
@@ -349,119 +350,120 @@ model Verification {
 }
 
 model Institute {
-  id                  String                     @id @default(cuid())
-  providerType        ProviderType               @default(INSTITUTE)
-  name                String
-  slug                String
-  description         String?
-  phone               String?
-  email               String?
-  website             String?
-  address             String
-  latitude            Float?
-  longitude           Float?
-  logo                String?
-  coverImage          String?
-  googlePlaceId       String?                    @unique
-  googleRating        Float?
-  googleReviewCount   Int?
-  cityId              String
-  isVerified          Boolean                    @default(false)
-  isFeatured          Boolean                    @default(false)
-  isActive            Boolean                    @default(true)
-  createdAt           DateTime                   @default(now())
-  updatedAt           DateTime                   @updatedAt
-  crmIntegrations     CRMIntegration[]
+  id                      String                            @id @default(cuid())
+  providerType            ProviderType                      @default(INSTITUTE)
+  name                    String
+  slug                    String
+  description             String?
+  phone                   String?
+  email                   String?
+  website                 String?
+  address                 String
+  latitude                Float?
+  longitude               Float?
+  logo                    String?
+  coverImage              String?
+  googlePlaceId           String?                           @unique
+  googleRating            Float?
+  googleReviewCount       Int?
+  cityId                  String
+  isVerified              Boolean                           @default(false)
+  isFeatured              Boolean                           @default(false)
+  isActive                Boolean                           @default(true)
+  createdAt               DateTime                          @default(now())
+  updatedAt               DateTime                          @updatedAt
+  crmIntegrations         CRMIntegration[]
   inboundLeadIntegrations InboundLeadIntegration[]
-  inboundLeads        InboundLead[]
-  imageUrl            String?
-  averageRating       Float?                     @default(0)
-  reviewCount         Int                        @default(0)
-  googleMapsUrl       String?
-  placeTypes          String[]
-  gallery             String[]
-  subscriptionPlan    SubscriptionPlan           @default(BASIC)
-  planWeight          Int                        @default(1)
-  youtubeVideos       String[]
-  classroomImages     String[]
-  feeInfo             String?
-  planExpiresAt       DateTime?
-  facebookUrl         String?
-  instagramUrl        String?
-  telegramUrl         String?
-  twitterUrl          String?
-  youtubeUrl          String?
-  linkedinUrl         String?
-  whatsappUrl         String?
-  isPublished         Boolean                    @default(true)
-  mode                InstituteMode              @default(OFFLINE)
-  viewCount           Int                        @default(0)
-  affiliations        String[]                   @default([])
-  awards              String[]                   @default([])
-  brochureUrl         String?
-  compareCount        Int                        @default(0)
-  cons                String[]                   @default([])
-  establishedYear     Int?
-  feeMax              Int?
-  feeMin              Int?
-  hasCertification    Boolean                    @default(false)
-  hasDemoClasses      Boolean                    @default(false)
-  hasHostelFacility   Boolean                    @default(false)
-  hasOnlineClasses    Boolean                    @default(false)
-  hasScholarship      Boolean                    @default(false)
-  mediumOfInstruction String[]                   @default(["English", "Hindi"])
-  metaDescription     String?
-  metaTitle           String?
-  metaKeywords        String?
-  pros                String[]                   @default([])
-  refundPolicy        String?
-  totalBranches       Int?
-  totalStudents       Int?
-  city                City                       @relation(fields: [cityId], references: [id])
-  categories          InstituteCategory[]
-  managers            InstituteManager[]
-  reviews             Review[]
-  communityQuestions  CommunityQuestion[]
-  compareListItems    CompareListInstitute[]
-  achievements        InstituteAchievement[]
-  batches             InstituteBatch[]
-  claims              InstituteClaim[]
-  comparisonsAsFirst  InstituteComparisonCache[] @relation("ComparisonAsFirst")
-  comparisonsAsSecond InstituteComparisonCache[] @relation("ComparisonAsSecond")
-  dailyViews          InstituteDailyView[]
-  visits              InstituteVisit[]
-  enquiries           InstituteEnquiry[]
-  facilities          InstituteFacility[]
-  faqs                InstituteFAQ[]
-  highlightStats      InstituteHighlightStat[]
-  operatingHours      InstituteOperatingHour[]
-  instituteRequest    InstituteRequest?
-  notablepersons      NotablePersons[]
-  facultyMembers      InstituteFacultyMember[]
-  salesAssignments    SalesAssignment?
-  salesRequests       SalesAssignmentRequest[]
-  payments            SubscriptionPayment[]
-  unlocks             InstituteUnlock[]
-  viewHistory         UserHistory[]
-  shortlistedBy       UserShortlist[]
-  blogPosts           BlogPost[]                 @relation("InstituteBlogPosts")
-  memberships         InstituteMembership[]
-  ismAssignments      InstituteSalesManagerAssignment[]
-  admissionRecords    AdmissionRecord[]
-  ismInviteRequests   IsmInviteRequest[]
+  inboundLeads            InboundLead[]
+  imageUrl                String?
+  averageRating           Float?                            @default(0)
+  reviewCount             Int                               @default(0)
+  googleMapsUrl           String?
+  placeTypes              String[]
+  gallery                 String[]
+  subscriptionPlan        SubscriptionPlan                  @default(BASIC)
+  planWeight              Int                               @default(1)
+  youtubeVideos           String[]
+  classroomImages         String[]
+  feeInfo                 String?
+  planExpiresAt           DateTime?
+  facebookUrl             String?
+  instagramUrl            String?
+  telegramUrl             String?
+  twitterUrl              String?
+  youtubeUrl              String?
+  linkedinUrl             String?
+  whatsappUrl             String?
+  isPublished             Boolean                           @default(true)
+  mode                    InstituteMode                     @default(OFFLINE)
+  viewCount               Int                               @default(0)
+  affiliations            String[]                          @default([])
+  awards                  String[]                          @default([])
+  brochureUrl             String?
+  compareCount            Int                               @default(0)
+  cons                    String[]                          @default([])
+  establishedYear         Int?
+  feeMax                  Int?
+  feeMin                  Int?
+  hasCertification        Boolean                           @default(false)
+  hasDemoClasses          Boolean                           @default(false)
+  hasHostelFacility       Boolean                           @default(false)
+  hasOnlineClasses        Boolean                           @default(false)
+  hasScholarship          Boolean                           @default(false)
+  mediumOfInstruction     String[]                          @default(["English", "Hindi"])
+  metaDescription         String?
+  metaTitle               String?
+  metaKeywords            String?
+  pros                    String[]                          @default([])
+  refundPolicy            String?
+  totalBranches           Int?
+  totalStudents           Int?
+  city                    City                              @relation(fields: [cityId], references: [id])
+  categories              InstituteCategory[]
+  managers                InstituteManager[]
+  reviews                 Review[]
+  communityQuestions      CommunityQuestion[]
+  compareListItems        CompareListInstitute[]
+  achievements            InstituteAchievement[]
+  batches                 InstituteBatch[]
+  claims                  InstituteClaim[]
+  comparisonsAsFirst      InstituteComparisonCache[]        @relation("ComparisonAsFirst")
+  comparisonsAsSecond     InstituteComparisonCache[]        @relation("ComparisonAsSecond")
+  dailyViews              InstituteDailyView[]
+  visits                  InstituteVisit[]
+  enquiries               InstituteEnquiry[]
+  facilities              InstituteFacility[]
+  faqs                    InstituteFAQ[]
+  highlightStats          InstituteHighlightStat[]
+  operatingHours          InstituteOperatingHour[]
+  instituteRequest        InstituteRequest?
+  notablepersons          NotablePersons[]
+  facultyMembers          InstituteFacultyMember[]
+  salesAssignments        SalesAssignment?
+  salesRequests           SalesAssignmentRequest[]
+  payments                SubscriptionPayment[]
+  unlocks                 InstituteUnlock[]
+  viewHistory             UserHistory[]
+  shortlistedBy           UserShortlist[]
+  blogPosts               BlogPost[]                        @relation("InstituteBlogPosts")
+  memberships             InstituteMembership[]
+  ismAssignments          InstituteSalesManagerAssignment[]
+  admissionRecords        AdmissionRecord[]
+  ismInviteRequests       IsmInviteRequest[]
 
   studentRecords StudentInstituteRecord[]
   teacherRecords TeacherInstituteRecord[]
 
-  contactStatus       String                     @default("NOT_CONTACTED")
-  contactComment      String?                    @db.Text
-  contactedAt         DateTime?
-  lastContactedBy     String?
-  contactNotes        InstituteContactNote[]
+  contactStatus   String                 @default("NOT_CONTACTED")
+  contactComment  String?                @db.Text
+  contactedAt     DateTime?
+  lastContactedBy String?
+  contactNotes    InstituteContactNote[]
 
-  conversations Conversation[]
+  conversations          Conversation[]
   communicationTemplates InstituteCommunicationTemplate[]
-  notices       InstituteNotice[]
+  notices                InstituteNotice[]
+  hubMemberships         InstituteHubMember[]
 
   @@index([cityId])
   @@index([slug])
@@ -558,16 +560,16 @@ model InstituteManager {
 }
 
 model Review {
-  id          String       @id @default(cuid())
+  id          String        @id @default(cuid())
   rating      Int
   comment     String?
   userId      String
   instituteId String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  status      ReviewStatus @default(PENDING)
-  institute   Institute    @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  status      ReviewStatus  @default(PENDING)
+  institute   Institute     @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   replies     ReviewReply[]
 
   @@unique([userId, instituteId])
@@ -638,16 +640,16 @@ model UserHistory {
 }
 
 model InstituteUnlock {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   userId      String
   instituteId String
-  unlockType  String    // "PHONE", "WEBSITE", "EMAIL", "SOCIAL", "COMMUNITY"
-  coinsSpent  Int       @default(1)
+  unlockType  String // "PHONE", "WEBSITE", "EMAIL", "SOCIAL", "COMMUNITY"
+  coinsSpent  Int      @default(1)
   description String?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
 
-  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institute Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([instituteId])
   @@index([userId])
@@ -656,37 +658,37 @@ model InstituteUnlock {
 }
 
 model InstituteEnquiry {
-  id                     String                @id @default(cuid())
+  id                     String                 @id @default(cuid())
   instituteId            String
   name                   String
   phone                  String
   email                  String?
   message                String?
-  status                 String                @default("NEW")
-  userContactStatus       String                @default("NEW")
-  isForwarded            Boolean               @default(false)
-  adminNote              String?               @db.Text
-  salesManagerNote       String?               @db.Text
+  status                 String                 @default("NEW")
+  userContactStatus      String                 @default("NEW")
+  isForwarded            Boolean                @default(false)
+  adminNote              String?                @db.Text
+  salesManagerNote       String?                @db.Text
   assignedSalesManagerId String?
-  assignedSalesManager   User?                 @relation("SalesEnquiryAssignments", fields: [assignedSalesManagerId], references: [id], onDelete: SetNull)
+  assignedSalesManager   User?                  @relation("SalesEnquiryAssignments", fields: [assignedSalesManagerId], references: [id], onDelete: SetNull)
   assignedIsmId          String?
-  assignedIsm            User?                 @relation("IsmEnquiryAssignments", fields: [assignedIsmId], references: [id], onDelete: SetNull)
-  ismNote                String?               @db.Text
+  assignedIsm            User?                  @relation("IsmEnquiryAssignments", fields: [assignedIsmId], references: [id], onDelete: SetNull)
+  ismNote                String?                @db.Text
   nextFollowUp           DateTime?
-  followUpNote           String?               @db.Text
-  convertedToAdmission   Boolean               @default(false)
+  followUpNote           String?                @db.Text
+  convertedToAdmission   Boolean                @default(false)
   lastUpdatedByRole      String?
   lastUpdatedByName      String?
   parentId               String?
   course                 String?
   batch                  String?
-  tags                   String[]              @default([])
-  source                 String                @default("ACADEMYFIND")
+  tags                   String[]               @default([])
+  source                 String                 @default("ACADEMYFIND")
   sourceDetails          Json?
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @updatedAt
-  institute              Institute             @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  distributionLogs       LeadDistributionLog[] @relation("DistributionLogs")
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  institute              Institute              @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  distributionLogs       LeadDistributionLog[]  @relation("DistributionLogs")
   statusHistory          EnquiryStatusHistory[]
   comments               EnquiryComment[]
   ismActivities          IsmLeadActivity[]
@@ -745,16 +747,16 @@ model StudentProfile {
 }
 
 model BuddyRequest {
-  id          String             @id @default(cuid())
-  senderId    String
-  receiverId  String
-  status      BuddyRequestStatus @default(PENDING)
-  message     String?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id         String             @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     BuddyRequestStatus @default(PENDING)
+  message    String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
 
-  sender      User               @relation("BuddyRequestsSent", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver    User               @relation("BuddyRequestsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender   User @relation("BuddyRequestsSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("BuddyRequestsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
   @@index([senderId])
@@ -771,29 +773,29 @@ enum BuddyRequestStatus {
 }
 
 model BookListing {
-  id            String            @id @default(cuid())
-  sellerId      String
-  buyerId       String?
-  title         String
-  author        String?
-  instituteName String?
-  examCategory  String?
-  subject       String?
-  condition     BookCondition     @default(LIKE_NEW)
-  price         Int               @default(0)
-  originalPrice Int?
-  isFree        Boolean           @default(false)
-  description   String?           @db.Text
-  images        String[]          @default([])
-  city          String
-  locality      String?
-  status        BookListingStatus @default(PENDING_APPROVAL)
+  id              String            @id @default(cuid())
+  sellerId        String
+  buyerId         String?
+  title           String
+  author          String?
+  instituteName   String?
+  examCategory    String?
+  subject         String?
+  condition       BookCondition     @default(LIKE_NEW)
+  price           Int               @default(0)
+  originalPrice   Int?
+  isFree          Boolean           @default(false)
+  description     String?           @db.Text
+  images          String[]          @default([])
+  city            String
+  locality        String?
+  status          BookListingStatus @default(PENDING_APPROVAL)
   rejectionReason String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
-  seller        User              @relation("SellerBookListings", fields: [sellerId], references: [id], onDelete: Cascade)
-  buyer         User?             @relation("BuyerBookListings", fields: [buyerId], references: [id])
+  seller User  @relation("SellerBookListings", fields: [sellerId], references: [id], onDelete: Cascade)
+  buyer  User? @relation("BuyerBookListings", fields: [buyerId], references: [id])
 
   @@index([sellerId])
   @@index([buyerId])
@@ -822,21 +824,21 @@ enum BookListingStatus {
 }
 
 model InstituteMembership {
-  id            String                  @id @default(cuid())
-  userId        String
-  instituteId   String
-  role          InstituteMemberRole
-  status        MembershipStatus        @default(PENDING)
-  joinedAt      DateTime?
-  leftAt        DateTime?
-  isActive      Boolean                 @default(true)
-  joinedViaAcademyFind Boolean          @default(false)
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
-  user          User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  institute     Institute               @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  studentRecord StudentInstituteRecord?
-  teacherRecord TeacherInstituteRecord?
+  id                   String                  @id @default(cuid())
+  userId               String
+  instituteId          String
+  role                 InstituteMemberRole
+  status               MembershipStatus        @default(PENDING)
+  joinedAt             DateTime?
+  leftAt               DateTime?
+  isActive             Boolean                 @default(true)
+  joinedViaAcademyFind Boolean                 @default(false)
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  user                 User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institute            Institute               @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  studentRecord        StudentInstituteRecord?
+  teacherRecord        TeacherInstituteRecord?
 
   @@unique([userId, instituteId, role])
   @@index([instituteId])
@@ -920,9 +922,9 @@ enum ConversationType {
 }
 
 model Conversation {
-  id             String                    @id @default(cuid())
+  id             String                 @id @default(cuid())
   type           ConversationType
-  dmKey          String?                   @unique
+  dmKey          String?                @unique
   instituteId    String?
   batchId        String?
   channelType    ChannelType?
@@ -930,30 +932,30 @@ model Conversation {
   imageUrl       String?
   description    String?
   createdById    String?
-  visibility     ConversationVisibility    @default(PRIVATE)
-  memberCount    Int                       @default(0)
+  visibility     ConversationVisibility @default(PRIVATE)
+  memberCount    Int                    @default(0)
   lastMessageId  String?
   lastMessageAt  DateTime?
   lastActivityAt DateTime?
-  isReadOnly     Boolean                   @default(false)
-  
-  // Study Group Fields
-  isStudyGroup   Boolean                   @default(false)
-  examCategory   String?
-  subject        String?
-  city           String?
-  tags           String[]                  @default([])
-  rules          String?                   @db.Text
-  maxMembers     Int?                      @default(500)
+  isReadOnly     Boolean                @default(false)
 
-  createdAt      DateTime                  @default(now())
-  updatedAt      DateTime                  @updatedAt
-  institute      Institute?                @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  batch          InstituteBatch?           @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  createdBy      User?                     @relation(fields: [createdById], references: [id])
-  participants   ConversationParticipant[]
-  messages       Message[]
-  lastMessage    Message?                  @relation("LastMessage", fields: [lastMessageId], references: [id])
+  // Study Group Fields
+  isStudyGroup Boolean  @default(false)
+  examCategory String?
+  subject      String?
+  city         String?
+  tags         String[] @default([])
+  rules        String?  @db.Text
+  maxMembers   Int?     @default(500)
+
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  institute    Institute?                @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  batch        InstituteBatch?           @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  createdBy    User?                     @relation(fields: [createdById], references: [id])
+  participants ConversationParticipant[]
+  messages     Message[]
+  lastMessage  Message?                  @relation("LastMessage", fields: [lastMessageId], references: [id])
 
   @@unique([instituteId, channelType])
   @@index([type])
@@ -1208,18 +1210,18 @@ enum ConversationRole {
 }
 
 model ContactMessage {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   name      String
   phone     String?
   email     String
   subject   String?
   message   String
-  isRead    Boolean  @default(false)
+  isRead    Boolean        @default(false)
   userId    String?
-  user      User?    @relation("UserContactMessages", fields: [userId], references: [id])
+  user      User?          @relation("UserContactMessages", fields: [userId], references: [id])
   replies   ContactReply[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @default(now()) @updatedAt
 
   @@map("contact_message")
 }
@@ -1347,31 +1349,31 @@ model SalesAssignmentRequest {
   salesManagerId String
   type           SalesRequestType
   status         SalesRequestStatus @default(PENDING)
-  
+
   // For INSTITUTE type
-  instituteId    String?
-  
+  instituteId String?
+
   // For AREA type
-  areaName       String?
-  latitude       Float?
-  longitude      Float?
-  radiusKm       Float?
-  
+  areaName  String?
+  latitude  Float?
+  longitude Float?
+  radiusKm  Float?
+
   // For CATEGORY type
-  categoryId     String?
-  
-  reason         String?
-  adminRemark    String?
-  reviewedAt     DateTime?
-  reviewedById   String?
-  
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  
-  salesManager   User               @relation("SalesAssignmentRequests", fields: [salesManagerId], references: [id], onDelete: Cascade)
-  institute      Institute?         @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  category       Category?          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  reviewedBy     User?              @relation("ReviewedSalesRequests", fields: [reviewedById], references: [id], onDelete: SetNull)
+  categoryId String?
+
+  reason       String?
+  adminRemark  String?
+  reviewedAt   DateTime?
+  reviewedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  salesManager User       @relation("SalesAssignmentRequests", fields: [salesManagerId], references: [id], onDelete: Cascade)
+  institute    Institute? @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  category     Category?  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  reviewedBy   User?      @relation("ReviewedSalesRequests", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([salesManagerId])
   @@index([status])
@@ -1489,26 +1491,26 @@ model InstituteDailyView {
 }
 
 model InstituteVisit {
-  id          String    @id @default(cuid())
+  id          String  @id @default(cuid())
   instituteId String
-  userId      String?   
-  sessionId   String?   
+  userId      String?
+  sessionId   String?
 
-  city        String?
-  country     String?
-  region      String?
+  city    String?
+  country String?
+  region  String?
 
-  os          String?
-  browser     String?
-  deviceType  String?
+  os         String?
+  browser    String?
+  deviceType String?
 
-  duration    Int       @default(0)
+  duration Int @default(0)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  institute Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([instituteId])
   @@index([createdAt])
@@ -2088,9 +2090,9 @@ model BlogPost {
   // Dates
   //-----------------------------------
 
-  submittedAt DateTime?
-  phoneVerificationReminderCount Int @default(0)
-  lastPhoneReminderAt DateTime?
+  submittedAt                    DateTime?
+  phoneVerificationReminderCount Int       @default(0)
+  lastPhoneReminderAt            DateTime?
 
   reviewedAt DateTime?
 
@@ -2618,8 +2620,8 @@ model InboundLeadIntegration {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
-  institute          Institute       @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  leads              InboundLead[]
+  institute Institute     @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  leads     InboundLead[]
 
   @@index([instituteId])
   @@index([apiKey])
@@ -2627,22 +2629,22 @@ model InboundLeadIntegration {
 }
 
 model InboundLead {
-  id            String                  @id @default(cuid())
+  id            String   @id @default(cuid())
   integrationId String?
   instituteId   String
   name          String
   phone         String
   email         String?
-  message       String?                 @db.Text
-  source        String                  // META_ADS | GOOGLE_ADS | WEBSITE_WEBHOOK | ZAPIER | LINKEDIN
+  message       String?  @db.Text
+  source        String // META_ADS | GOOGLE_ADS | WEBSITE_WEBHOOK | ZAPIER | LINKEDIN
   sourceDetails Json?
-  status        String                  @default("NEW") // NEW | CONTACTED | CONVERTED | JUNK
-  notes         String?                 @db.Text
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
+  status        String   @default("NEW") // NEW | CONTACTED | CONVERTED | JUNK
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  integration   InboundLeadIntegration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
-  institute     Institute               @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  integration InboundLeadIntegration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+  institute   Institute               @relation(fields: [instituteId], references: [id], onDelete: Cascade)
 
   @@index([instituteId])
   @@index([integrationId])
@@ -2730,59 +2732,59 @@ model UserSkill {
 // ==========================================
 
 model VisitorSession {
-  id          String   @id @default(cuid())
-  cookieId    String   @unique
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ipAddress   String?
-  city        String?
-  country     String?
-  device      String?
-  browser     String?
-  os          String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  events      VisitorEvent[]
+  id        String         @id @default(cuid())
+  cookieId  String         @unique
+  userId    String?
+  user      User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress String?
+  city      String?
+  country   String?
+  device    String?
+  browser   String?
+  os        String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  events    VisitorEvent[]
 }
 
 model VisitorEvent {
-  id          String   @id @default(cuid())
-  sessionId   String
-  session     VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  eventType   String   // e.g., "PAGE_VIEW", "CLICK", "SEARCH"
-  pageUrl     String
-  details     String?  // Extra info like search query or button name
-  createdAt   DateTime @default(now())
+  id        String         @id @default(cuid())
+  sessionId String
+  session   VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  eventType String // e.g., "PAGE_VIEW", "CLICK", "SEARCH"
+  pageUrl   String
+  details   String? // Extra info like search query or button name
+  createdAt DateTime       @default(now())
 }
 
 model Advertisement {
-  id                String   @id @default(cuid())
+  id                String                  @id @default(cuid())
   userId            String
   title             String
   description       String?
   linkUrl           String?
   images            String[] // Minimum 1 image required, up to 4
-  status            AdvertisementStatus @default(PENDING) // PENDING, APPROVED, REJECTED, EXPIRED
+  status            AdvertisementStatus     @default(PENDING) // PENDING, APPROVED, REJECTED, EXPIRED
   visibility        AdvertisementVisibility @default(VISIBLE) // VISIBLE, HIDDEN, DELETED
-  pricePaid         Int      @default(199)
+  pricePaid         Int                     @default(199)
   paymentScreenshot String?
   utrNumber         String?
-  
-  isRenewalRequest  Boolean  @default(false)
-  editRequestData   Json?
-  
-  startDate         DateTime?
-  expiryDate        DateTime? // Default 30 days from approval date
-  
-  views             Int @default(0) // Total views (logged in + not logged in)
-  clicks            Int @default(0) // Total clicks (logged in + not logged in)
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  analytics         AdvertisementAnalytic[]
-  
+
+  isRenewalRequest Boolean @default(false)
+  editRequestData  Json?
+
+  startDate  DateTime?
+  expiryDate DateTime? // Default 30 days from approval date
+
+  views  Int @default(0) // Total views (logged in + not logged in)
+  clicks Int @default(0) // Total clicks (logged in + not logged in)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analytics AdvertisementAnalytic[]
+
   @@index([userId])
   @@index([status])
   @@map("advertisement")
@@ -2791,15 +2793,15 @@ model Advertisement {
 model AdvertisementAnalytic {
   id              String   @id @default(cuid())
   advertisementId String
-  actionType      String   // "VIEW" or "CLICK"
-  pageUrl         String?  // The page where the ad was viewed/clicked
-  userId          String?  // If the viewer was logged in
+  actionType      String // "VIEW" or "CLICK"
+  pageUrl         String? // The page where the ad was viewed/clicked
+  userId          String? // If the viewer was logged in
   count           Int      @default(1)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now()) @updatedAt
-  
-  advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
-  
+
+  advertisement Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
+
   @@index([advertisementId])
   @@map("advertisement_analytic")
 }
@@ -2824,32 +2826,33 @@ model SystemSetting {
 
   @@map("system_settings")
 }
-model EnquiryStatusHistory {
-  id              String           @id @default(cuid())
-  enquiryId       String
-  oldStatus       String?
-  newStatus       String
-  statusType      String           // INSTITUTE or STUDENT
-  updatedByRole   String?          // ADMIN | SALES_MANAGER | SYSTEM
-  updatedByName   String?
-  createdAt       DateTime         @default(now())
 
-  enquiry         InstituteEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+model EnquiryStatusHistory {
+  id            String   @id @default(cuid())
+  enquiryId     String
+  oldStatus     String?
+  newStatus     String
+  statusType    String // INSTITUTE or STUDENT
+  updatedByRole String? // ADMIN | SALES_MANAGER | SYSTEM
+  updatedByName String?
+  createdAt     DateTime @default(now())
+
+  enquiry InstituteEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
 
   @@index([enquiryId])
   @@map("enquiry_status_history")
 }
 
 model EnquiryComment {
-  id              String           @id @default(cuid())
-  enquiryId       String
-  content         String           @db.Text
-  authorRole      String           // ADMIN | SALES_MANAGER
-  authorName      String
-  authorId        String?
-  createdAt       DateTime         @default(now())
+  id         String   @id @default(cuid())
+  enquiryId  String
+  content    String   @db.Text
+  authorRole String // ADMIN | SALES_MANAGER
+  authorName String
+  authorId   String?
+  createdAt  DateTime @default(now())
 
-  enquiry         InstituteEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  enquiry InstituteEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
 
   @@index([enquiryId])
   @@map("enquiry_comment")
@@ -2858,16 +2861,16 @@ model EnquiryComment {
 // ─── INSTITUTE SALES MANAGER MODELS ────────────────────────────────────────
 
 model InstituteSalesManagerAssignment {
-  id          String    @id @default(cuid())
-  userId      String
-  instituteId String
+  id           String    @id @default(cuid())
+  userId       String
+  instituteId  String
   assignedById String
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation("IsmAssignments", fields: [userId], references: [id], onDelete: Cascade)
-  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  assignedBy  User      @relation("IsmAssignedBy", fields: [assignedById], references: [id])
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation("IsmAssignments", fields: [userId], references: [id], onDelete: Cascade)
+  institute    Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  assignedBy   User      @relation("IsmAssignedBy", fields: [assignedById], references: [id])
 
   @@unique([userId, instituteId])
   @@index([instituteId])
@@ -2876,15 +2879,15 @@ model InstituteSalesManagerAssignment {
 }
 
 model IsmLeadActivity {
-  id          String   @id @default(cuid())
-  enquiryId   String
-  ismId       String?
-  type        String   // NOTE, WHATSAPP_SENT, CALL_LOGGED, STATUS_CHANGED, FOLLOWUP_SET, CONVERTED
-  content     String?  @db.Text
-  meta        Json?    // extra data (e.g. old/new status for STATUS_CHANGED)
-  createdAt   DateTime @default(now())
-  enquiry     InstituteEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
-  ism         User?            @relation("IsmActivities", fields: [ismId], references: [id], onDelete: SetNull)
+  id        String           @id @default(cuid())
+  enquiryId String
+  ismId     String?
+  type      String // NOTE, WHATSAPP_SENT, CALL_LOGGED, STATUS_CHANGED, FOLLOWUP_SET, CONVERTED
+  content   String?          @db.Text
+  meta      Json? // extra data (e.g. old/new status for STATUS_CHANGED)
+  createdAt DateTime         @default(now())
+  enquiry   InstituteEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  ism       User?            @relation("IsmActivities", fields: [ismId], references: [id], onDelete: SetNull)
 
   @@index([enquiryId])
   @@index([ismId])
@@ -2892,19 +2895,19 @@ model IsmLeadActivity {
 }
 
 model AdmissionRecord {
-  id            String          @id @default(cuid())
-  enquiryId     String          @unique
+  id            String           @id @default(cuid())
+  enquiryId     String           @unique
   instituteId   String
   ismId         String
   studentName   String
   courseName    String?
-  totalFee      Float           @default(0)
-  paidAmount    Float           @default(0)
-  feeStatus     String          @default("PENDING") // PENDING, PARTIAL, PAID
-  admissionNote String?         @db.Text
-  admissionDate DateTime        @default(now())
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  totalFee      Float            @default(0)
+  paidAmount    Float            @default(0)
+  feeStatus     String           @default("PENDING") // PENDING, PARTIAL, PAID
+  admissionNote String?          @db.Text
+  admissionDate DateTime         @default(now())
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   enquiry       InstituteEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
   institute     Institute        @relation(fields: [instituteId], references: [id], onDelete: Cascade)
   ism           User             @relation("IsmAdmissions", fields: [ismId], references: [id])
@@ -2951,17 +2954,17 @@ model IsmInviteRequest {
 }
 
 model InstituteCommunicationTemplate {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   instituteId String
-  type        String    // WHATSAPP | EMAIL
+  type        String // WHATSAPP | EMAIL
   title       String
   subject     String?
-  content     String    @db.Text
-  variables   String[]  @default(["name", "instituteName", "course"])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  content     String   @db.Text
+  variables   String[] @default(["name", "instituteName", "course"])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  institute Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
 
   @@index([instituteId])
   @@index([type])
@@ -3016,4 +3019,33 @@ model InstituteNotice {
   @@index([instituteId, isActive])
   @@index([instituteId, isPinned])
   @@map("institute_notice")
+}
+
+model InstituteHub {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy  User                 @relation("HubCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  institutes InstituteHubMember[]
+
+  @@index([createdById])
+  @@map("institute_hub")
+}
+
+model InstituteHubMember {
+  hubId       String
+  instituteId String
+  addedAt     DateTime @default(now())
+
+  hub       InstituteHub @relation(fields: [hubId], references: [id], onDelete: Cascade)
+  institute Institute    @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+
+  @@id([hubId, instituteId])
+  @@index([hubId])
+  @@index([instituteId])
+  @@map("institute_hub_member")
 }

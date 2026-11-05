@@ -4,16 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth/auth";
 import {
     Building2,
     MessageSquare,
     Star,
     Bookmark,
     ArrowRight,
-    Sparkles
+    Sparkles,
+    Network
 } from "lucide-react";
 import { InstituteQRCode } from "@/components/manager/InstituteQRCode";
+import { HubSectionManager } from "@/components/hubs/HubSectionManager";
 import { Metadata } from "next";
+
 export const metadata: Metadata = {
     title: "Manager Control Panel | AcademyFind",
     robots: {
@@ -21,6 +26,7 @@ export const metadata: Metadata = {
         follow: false,
     },
 };
+
 export default async function InstituteDashboardOverview({
     params
 }: {
@@ -28,6 +34,10 @@ export default async function InstituteDashboardOverview({
 }) {
     // 🚀 Next.js 15 Async Params Fix
     const { instituteId } = await params;
+
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
 
     // Fetch Institute with related aggregate counts
     const institute = await prisma.institute.findUnique({
@@ -46,6 +56,56 @@ export default async function InstituteDashboardOverview({
     if (!institute) redirect("/manager");
 
     const plan = institute.subscriptionPlan; // BASIC, PREMIUM, ULTRA
+
+    // Fetch hubs linked to this institute
+    const hubs = await prisma.instituteHub.findMany({
+        where: {
+            institutes: {
+                some: { instituteId: instituteId }
+            }
+        },
+        include: {
+            institutes: {
+                include: {
+                    institute: {
+                        select: {
+                            id: true,
+                            name: true,
+                            slug: true,
+                            logo: true,
+                            imageUrl: true,
+                            city: { select: { name: true } }
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: { updatedAt: "desc" }
+    });
+
+    // All institutes this manager manages, to populate the Hub manager dialog
+    const managerInstitutes = session?.user?.id
+        ? await prisma.instituteManager.findMany({
+            where: { userId: session.user.id },
+            include: {
+                institute: {
+                    include: {
+                        city: { select: { name: true } }
+                    }
+                }
+            }
+        })
+        : [];
+
+    const managedOptions = managerInstitutes.map((m) => ({
+        id: m.institute.id,
+        name: m.institute.name,
+        slug: m.institute.slug,
+        logo: m.institute.logo,
+        imageUrl: m.institute.imageUrl,
+        cityName: m.institute.city?.name || "Unknown City",
+        isActive: m.institute.isActive,
+    }));
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -98,83 +158,69 @@ export default async function InstituteDashboardOverview({
                                 {(institute.averageRating || 0).toFixed(1)}
                                 <span className="text-sm font-medium text-stone-500">/ 5.0</span>
                             </div>
-                            <p className="text-[11px] text-stone-400 mt-0.5">
-                                Based on {institute.reviewCount || 0} platform reviews
-                            </p>
-                        </div>
-                        
-                        <div className="h-px bg-stone-100" />
-                        
-                        {/* Google Rating */}
-                        <div>
-                            <div className="text-sm font-bold text-stone-600 flex items-baseline gap-1">
-                                {institute.googleRating ? institute.googleRating.toFixed(1) : "0.0"} 
-                                <span className="text-xs font-medium text-stone-400">/ 5.0</span>
+                            <div className="text-xs text-stone-500 flex items-center gap-1 mt-0.5">
+                                <span>Platform Reviews:</span>
+                                <span className="font-semibold text-stone-700">{institute._count.reviews}</span>
                             </div>
-                            <p className="text-[11px] text-stone-400 mt-0.5">
-                                Based on {institute.googleReviewCount || 0} Google reviews
-                            </p>
                         </div>
-                    </CardContent>
-                </Card>
 
-                {/* Stat 2: Student Enquiries (Conditional UI) */}
-                <Card className="rounded-2xl border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/60 backdrop-blur-xl relative overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.2,1,0.2,1)] hover:scale-[1.01]">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium text-stone-500">Student Leads</CardTitle>
-                        <MessageSquare className="w-4 h-4 text-blue-500" />
-                    </CardHeader>
-                    <CardContent>
-                        {plan === "BASIC" ? (
-                            <div>
-                                <div className="text-xl font-bold text-stone-400 flex items-center gap-1.5">
-                                    Locked <span>🔒</span>
+                        {/* Google Rating */}
+                        {institute.googleRating && (
+                            <div className="pt-2 border-t border-stone-200/40">
+                                <div className="text-lg font-bold text-stone-800 flex items-baseline gap-1">
+                                    {institute.googleRating.toFixed(1)}
+                                    <span className="text-xs font-medium text-stone-500">/ 5.0</span>
                                 </div>
-                                <p className="text-xs text-blue-600 font-medium mt-1 hover:underline">
-                                    <Link href={`/manager/${instituteId}/subscription`}>Upgrade to unlock leads &rarr;</Link>
-                                </p>
-                            </div>
-                        ) : (
-                            <div>
-                                <div className="text-2xl font-bold text-stone-800">
-                                    {institute._count.enquiries} Active Leads
+                                <div className="text-xs text-stone-500 flex items-center gap-1 mt-0.5">
+                                    <span>Google Reviews:</span>
+                                    <span className="font-semibold text-stone-700">{institute.googleReviewCount || 0}</span>
                                 </div>
-                                <p className="text-xs text-stone-400 mt-1">
-                                    Total enquiries received via platform
-                                </p>
                             </div>
                         )}
                     </CardContent>
                 </Card>
 
-                {/* Stat 3: Saves / Shortlists (Conditional UI) */}
+                {/* Stat 2: Student Leads */}
                 <Card className="rounded-2xl border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/60 backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.2,1,0.2,1)] hover:scale-[1.01]">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium text-stone-500">Saves Count</CardTitle>
-                        <Bookmark className="w-4 h-4 text-red-500" />
+                        <CardTitle className="text-sm font-medium text-stone-500">Student Leads</CardTitle>
+                        <MessageSquare className="w-4 h-4 text-amber-500" />
                     </CardHeader>
-                    <CardContent>
-                        {plan !== "ULTRA" && plan !== "PREMIUM" ? (
-                            <div>
-                                <div className="text-xl font-bold text-stone-400 flex items-center gap-1.5">
-                                    Premium/Elite Only <span>🔒</span>
-                                </div>
-                                <p className="text-xs text-stone-400 mt-1">
-                                    Audience analysis needs Premium or Elite Plan
-                                </p>
-                            </div>
-                        ) : (
-                            <div>
-                                <div className="text-2xl font-bold text-stone-800">
-                                    {institute._count.shortlistedBy} Students
-                                </div>
-                                <p className="text-xs text-stone-400 mt-1">
-                                    Students who have saved your academy
-                                </p>
-                            </div>
-                        )}
+                    <CardContent className="pt-2">
+                        <div className="text-3xl font-extrabold text-stone-800 tracking-tight">
+                            {institute._count.enquiries}
+                        </div>
+                        <p className="text-xs text-stone-500 mt-1">
+                            Direct student queries received
+                        </p>
                     </CardContent>
                 </Card>
+
+                {/* Stat 3: Student Shortlists */}
+                <Card className="rounded-2xl border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/60 backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.2,1,0.2,1)] hover:scale-[1.01]">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                        <CardTitle className="text-sm font-medium text-stone-500">Shortlisted</CardTitle>
+                        <Bookmark className="w-4 h-4 text-amber-500" />
+                    </CardHeader>
+                    <CardContent className="pt-2">
+                        <div className="text-3xl font-extrabold text-stone-800 tracking-tight">
+                            {institute._count.shortlistedBy}
+                        </div>
+                        <p className="text-xs text-stone-500 mt-1">
+                            Students saved this center
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* 🟡 CONNECTED HUBS & BRANCH CENTERS */}
+            <div className="pt-2">
+                <HubSectionManager
+                    hubs={hubs}
+                    managedInstitutes={managedOptions}
+                    currentInstituteId={instituteId}
+                    currentUserId={session?.user?.id || ""}
+                />
             </div>
 
             {/* Action Cards / Next Steps */}
