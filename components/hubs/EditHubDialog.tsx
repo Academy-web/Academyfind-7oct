@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import toast from "react-hot-toast";
 import {
   Dialog,
@@ -16,18 +15,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Building2,
   MapPin,
   Pencil,
   Trash2,
   Network,
+  Check,
   CheckCircle2,
   Loader2,
   AlertTriangle,
 } from "lucide-react";
 import { updateHub, deleteHub, ManagedInstituteOption } from "@/app/(public)/manager/hubs/actions";
+import { cn } from "@/lib/utils";
 
 export interface HubDetails {
   id: string;
@@ -52,7 +52,7 @@ export function EditHubDialog({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(hub.name);
   const [description, setDescription] = useState(hub.description || "");
-  const [selectedIds, setSelectedIds] = useState<string[]>(hub.memberInstituteIds);
+  const [selectedIds, setSelectedIds] = useState<string[]>(hub.memberInstituteIds || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -63,9 +63,7 @@ export function EditHubDialog({
     );
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleUpdate = async () => {
     if (!name.trim()) {
       toast.error("Please enter a name for the hub.");
       return;
@@ -79,8 +77,8 @@ export function EditHubDialog({
     setIsSubmitting(true);
     const result = await updateHub({
       hubId: hub.id,
-      name,
-      description,
+      name: name.trim(),
+      description: description.trim(),
       instituteIds: selectedIds,
     });
     setIsSubmitting(false);
@@ -124,7 +122,7 @@ export function EditHubDialog({
         )}
       </DialogTrigger>
 
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl border-stone-200/80 bg-white/95 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl border-stone-200/80 bg-white shadow-2xl p-6 sm:p-8">
         <DialogHeader className="space-y-2">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center shrink-0">
@@ -185,7 +183,7 @@ export function EditHubDialog({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleUpdate} className="space-y-5 mt-3">
+          <div className="space-y-5 mt-3">
             {/* Hub Name */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-stone-800 uppercase tracking-wider">
@@ -196,7 +194,6 @@ export function EditHubDialog({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Hub Name"
                 maxLength={100}
-                required
                 className="rounded-xl border-stone-200 focus:border-amber-400 focus:ring-amber-400/20 text-sm h-11"
               />
             </div>
@@ -233,39 +230,58 @@ export function EditHubDialog({
               </div>
 
               <div className="max-h-56 overflow-y-auto space-y-2 pr-1 rounded-2xl border border-stone-100 p-2 bg-stone-50/50">
-                {managedInstitutes.map((inst) => {
+                {(managedInstitutes || []).map((inst) => {
                   const isSelected = selectedIds.includes(inst.id);
                   const displayImg = inst.imageUrl || inst.logo;
 
                   return (
                     <div
                       key={inst.id}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => toggleInstitute(inst.id)}
-                      className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                      onKeyDown={(e) => {
+                        if (e.key === " " || e.key === "Enter") {
+                          e.preventDefault();
+                          toggleInstitute(inst.id);
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer select-none",
                         isSelected
                           ? "bg-amber-500/10 border-amber-300 shadow-xs"
                           : "bg-white border-stone-200/80 hover:border-stone-300"
-                      }`}
+                      )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleInstitute(inst.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 rounded-md"
-                        />
-                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-stone-100 border border-stone-200 shrink-0 relative">
+                        {/* Custom styled checkbox indicator */}
+                        <div
+                          className={cn(
+                            "w-4 h-4 rounded-[4px] border flex items-center justify-center transition-colors shrink-0",
+                            isSelected
+                              ? "bg-amber-500 border-amber-500 text-stone-950"
+                              : "border-stone-300 bg-white"
+                          )}
+                        >
+                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+
+                        {/* Image / Icon */}
+                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-stone-100 border border-stone-200 shrink-0 relative flex items-center justify-center">
                           {displayImg ? (
-                            <Image
+                            <img
                               src={displayImg}
                               alt={inst.name}
-                              fill
-                              className="object-cover"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = "none";
+                              }}
                             />
                           ) : (
-                            <Building2 className="w-4 h-4 text-stone-400 m-auto mt-2" />
+                            <Building2 className="w-4 h-4 text-stone-400" />
                           )}
                         </div>
+
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-stone-900 truncate">
                             {inst.name}
@@ -309,8 +325,9 @@ export function EditHubDialog({
                   Cancel
                 </Button>
                 <Button
-                  type="submit"
+                  type="button"
                   disabled={isSubmitting || selectedIds.length < 2}
+                  onClick={handleUpdate}
                   className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-stone-950 font-bold rounded-xl shadow-md disabled:opacity-50"
                 >
                   {isSubmitting ? (
@@ -324,7 +341,7 @@ export function EditHubDialog({
                 </Button>
               </div>
             </DialogFooter>
-          </form>
+          </div>
         )}
       </DialogContent>
     </Dialog>

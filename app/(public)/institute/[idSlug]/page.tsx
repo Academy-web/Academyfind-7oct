@@ -393,7 +393,7 @@ export default async function InstitutePage({ params }: PageProps) {
   const hubNames: string[] = [];
   const siblingMap = new Map<string, any>();
 
-  hubMemberships.forEach((hm: any) => {
+  (hubMemberships || []).forEach((hm: any) => {
     if (hm.hub?.name && !hubNames.includes(hm.hub.name)) {
       hubNames.push(hm.hub.name);
     }

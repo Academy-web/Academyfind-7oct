@@ -97,15 +97,17 @@ export default async function InstituteDashboardOverview({
         })
         : [];
 
-    const managedOptions = managerInstitutes.map((m) => ({
-        id: m.institute.id,
-        name: m.institute.name,
-        slug: m.institute.slug,
-        logo: m.institute.logo,
-        imageUrl: m.institute.imageUrl,
-        cityName: m.institute.city?.name || "Unknown City",
-        isActive: m.institute.isActive,
-    }));
+    const managedOptions = (managerInstitutes || [])
+        .filter((m) => m.institute)
+        .map((m) => ({
+            id: m.institute.id,
+            name: m.institute.name,
+            slug: m.institute.slug,
+            logo: m.institute.logo,
+            imageUrl: m.institute.imageUrl,
+            cityName: m.institute.city?.name || "Unknown City",
+            isActive: m.institute.isActive,
+        }));
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">

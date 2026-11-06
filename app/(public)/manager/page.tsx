@@ -101,15 +101,17 @@ export default async function ManagerRootPage() {
         orderBy: { updatedAt: "desc" }
     });
 
-    const managedOptions = managedInstitutes.map((m) => ({
-        id: m.institute.id,
-        name: m.institute.name,
-        slug: m.institute.slug,
-        logo: m.institute.logo,
-        imageUrl: m.institute.imageUrl,
-        cityName: m.institute.city?.name || "Unknown City",
-        isActive: m.institute.isActive,
-    }));
+    const managedOptions = (managedInstitutes || [])
+        .filter((m) => m.institute)
+        .map((m) => ({
+            id: m.institute.id,
+            name: m.institute.name,
+            slug: m.institute.slug,
+            logo: m.institute.logo,
+            imageUrl: m.institute.imageUrl,
+            cityName: m.institute.city?.name || "Unknown City",
+            isActive: m.institute.isActive,
+        }));
 
     return (
         <div className="container mx-auto max-w-5xl py-12 px-4 space-y-12">
