@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth/auth";
+import { headers } from "next/headers";
 
 function generateSlug(name: string) {
   return name
@@ -11,10 +13,35 @@ function generateSlug(name: string) {
     .replace(/(^-|-$)+/g, "");
 }
 
+async function verifyAdmin() {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    if (!session || session.user.role !== "ADMIN") {
+      return { ok: false, error: "Unauthorized: Administrator privileges required." };
+    }
+    return { ok: true, session };
+  } catch (err: any) {
+    console.error("verifyAdmin Error:", err);
+    return { ok: false, error: "Authentication verification failed." };
+  }
+}
+
 export async function createCity(formData: FormData) {
   try {
+    const authCheck = await verifyAdmin();
+    if (!authCheck.ok) {
+      return { success: false, error: authCheck.error };
+    }
+
     const name = (formData.get("name") as string)?.trim();
-    const state = (formData.get("state") as string)?.trim();
+    let state = (formData.get("state") as string)?.trim();
+    const customState = (formData.get("customState") as string)?.trim();
+    if (state === "CUSTOM" && customState) {
+      state = customState;
+    }
+
     const country = (formData.get("country") as string)?.trim() || "India";
     const customSlug = (formData.get("slug") as string)?.trim();
     const latitudeStr = formData.get("latitude") as string;
@@ -24,8 +51,8 @@ export async function createCity(formData: FormData) {
     if (!name) {
       return { success: false, error: "City name is required." };
     }
-    if (!state) {
-      return { success: false, error: "State is required." };
+    if (!state || state === "CUSTOM") {
+      return { success: false, error: "A valid state name is required." };
     }
 
     let slug = customSlug ? generateSlug(customSlug) : generateSlug(name);
@@ -73,6 +100,11 @@ export async function createCity(formData: FormData) {
 
 export async function updateCity(formData: FormData) {
   try {
+    const authCheck = await verifyAdmin();
+    if (!authCheck.ok) {
+      return { success: false, error: authCheck.error };
+    }
+
     const id = formData.get("id") as string;
     const name = (formData.get("name") as string)?.trim();
     const state = (formData.get("state") as string)?.trim();
@@ -84,7 +116,7 @@ export async function updateCity(formData: FormData) {
 
     if (!id) return { success: false, error: "City ID is missing." };
     if (!name) return { success: false, error: "City name is required." };
-    if (!state) return { success: false, error: "State is required." };
+    if (!state || state === "CUSTOM") return { success: false, error: "A valid state is required." };
 
     const cleanSlug = slug ? generateSlug(slug) : generateSlug(name);
 
@@ -131,6 +163,11 @@ export async function updateCity(formData: FormData) {
 
 export async function deleteCity(cityId: string) {
   try {
+    const authCheck = await verifyAdmin();
+    if (!authCheck.ok) {
+      return { success: false, error: authCheck.error };
+    }
+
     if (!cityId) return { success: false, error: "City ID is missing." };
 
     const city = await prisma.city.findUnique({
@@ -140,10 +177,11 @@ export async function deleteCity(cityId: string) {
 
     if (!city) return { success: false, error: "City not found." };
 
-    if (city._count.institutes > 0) {
+    const instituteCount = city._count?.institutes ?? 0;
+    if (instituteCount > 0) {
       return {
         success: false,
-        error: `Cannot delete "${city.name}" because it has ${city._count.institutes} linked institutes. Reassign or delete those institutes first.`,
+        error: `Cannot delete "${city.name}" because it has ${instituteCount} linked institutes. Reassign or delete those institutes first.`,
       };
     }
 
