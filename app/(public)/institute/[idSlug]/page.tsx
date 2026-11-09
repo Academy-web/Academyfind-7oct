@@ -9,7 +9,7 @@ import {
   PlayCircle, User, Presentation, BookOpen, IndianRupee, Clock,
   Home, Award, Calendar, Building, ThumbsUp, ThumbsDown, HelpCircle, Check,
   BadgeCheck, MessageCircle, ArrowRight, Settings, Lock, Unlock,
-  GraduationCap, UserCheck, Bell
+  GraduationCap, UserCheck, Bell, Network
 } from "lucide-react";
 import { FaFacebook, FaInstagram, FaLinkedin, FaTelegram, FaTwitter, FaWhatsapp, FaYoutube } from "react-icons/fa";
 
@@ -360,7 +360,7 @@ export default async function InstitutePage({ params }: PageProps) {
             institutes: {
               where: {
                 instituteId: { not: id },
-                institute: { isActive: true, isPublished: true },
+                institute: { isActive: true },
               },
               include: {
                 institute: {
@@ -694,6 +694,15 @@ export default async function InstitutePage({ params }: PageProps) {
                               {item.category.name}
                             </span>
                           ))}
+                          {siblingCenters.length > 0 && (
+                            <a
+                              href="#other-centers"
+                              className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-900 border border-amber-500/30 px-3 py-1 text-xs font-bold tracking-wide uppercase transition-all duration-200"
+                            >
+                              <Network className="w-3.5 h-3.5 text-amber-600" />
+                              <span>{siblingCenters.length} Other {siblingCenters.length === 1 ? "Center" : "Centers"}</span>
+                            </a>
+                          )}
                         </div>
                         {displayRating > 0 && institute.googlePlaceId && (
                           <Link

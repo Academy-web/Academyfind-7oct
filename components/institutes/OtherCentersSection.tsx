@@ -69,7 +69,7 @@ export function OtherCentersSection({
   );
 
   return (
-    <section className="relative mt-16 pt-12 border-t border-slate-200">
+    <section id="other-centers" className="relative mt-16 pt-12 border-t border-slate-200 scroll-mt-24">
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>

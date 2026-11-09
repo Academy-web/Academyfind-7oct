@@ -103,6 +103,7 @@ export async function createHub(payload: {
 
     revalidatePath("/manager");
     revalidatePath("/manager/hubs");
+    revalidatePath("/institute", "layout");
     uniqueInstituteIds.forEach((instId) => {
       revalidatePath(`/manager/${instId}`);
     });
@@ -198,6 +199,7 @@ export async function updateHub(payload: {
     revalidatePath("/manager");
     revalidatePath("/manager/hubs");
     revalidatePath(`/manager/hubs/${payload.hubId}`);
+    revalidatePath("/institute", "layout");
     new Set([...oldInstituteIds, ...uniqueInstituteIds]).forEach((instId) => {
       revalidatePath(`/manager/${instId}`);
     });
@@ -243,6 +245,7 @@ export async function deleteHub(
 
     revalidatePath("/manager");
     revalidatePath("/manager/hubs");
+    revalidatePath("/institute", "layout");
     instituteIds.forEach((instId) => {
       revalidatePath(`/manager/${instId}`);
     });
