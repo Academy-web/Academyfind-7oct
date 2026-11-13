@@ -202,31 +202,42 @@ export default function InstituteCard({
         hover:[transform:perspective(1000px)_rotateX(2deg)_rotateY(-2deg)]
       "
     >
-      {/* Image */}
-      <div className="relative h-52 overflow-hidden">
+      {/* Image / Logo Container - Full display with subtle ambient background */}
+      <div className="relative h-52 overflow-hidden bg-gradient-to-b from-stone-50 via-white to-stone-100/50 flex items-center justify-center">
         {image && isCloudinaryImage ? (
-          <CldImage
-            unoptimized
-            src={image}
-            alt={name}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="
-              object-cover
-              transition-transform
-              duration-500
-              group-hover:scale-105
-            "
-          />
-          // ) : image ? (
-          //   <img 
-          //     src={image} 
-          //     alt={name} 
-          //     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          //   />
+          <>
+            {/* Soft blurred ambient glow for depth */}
+            <div
+              className="absolute inset-0 bg-cover bg-center filter blur-xl opacity-20 scale-110 pointer-events-none"
+              style={{ backgroundImage: `url(${image})` }}
+            />
+            <CldImage
+              unoptimized
+              src={image}
+              alt={name}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="
+                object-contain
+                p-3.5
+                relative
+                z-0
+                transition-transform
+                duration-500
+                group-hover:scale-105
+              "
+            />
+          </>
         ) : (
-          <div className="flex h-full items-center justify-center bg-muted">
-            <Image src={getFallBackImage(category || "")} alt="No Image" width={400} height={400} unoptimized />
+          <div className="flex h-full w-full items-center justify-center bg-muted p-4">
+            <Image
+              src={getFallBackImage(category || "")}
+              alt="No Image"
+              width={400}
+              height={400}
+              className="object-contain max-h-full max-w-full"
+              unoptimized
+            />
           </div>
         )}
 

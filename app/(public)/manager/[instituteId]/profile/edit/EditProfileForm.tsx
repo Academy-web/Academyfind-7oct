@@ -242,8 +242,11 @@ export default function EditProfileForm({
                             <CardTitle className="flex items-center gap-2 text-base text-stone-900">
                                 <ImageIcon className="w-5 h-5 text-stone-800" /> Logo / Display Image
                             </CardTitle>
-                            <CardDescription className="text-xs">
-                                Appears everywhere as your square profile picture (e.g. search results).
+                            <CardDescription className="text-xs space-y-1.5 flex flex-col items-start">
+                                <span>Appears everywhere as your profile picture (e.g. search results & directory cards).</span>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-900 border border-amber-500/20 font-semibold text-[11px]">
+                                    📐 Recommended: 1:1 Square (500 × 500 px) • Min: 200 × 200 px
+                                </span>
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="p-5 flex flex-col items-center justify-center space-y-4">
@@ -276,8 +279,11 @@ export default function EditProfileForm({
                             <CardTitle className="flex items-center gap-2 text-base text-stone-900">
                                 <ImageIcon className="w-5 h-5 text-stone-800" /> Cover / Banner Image
                             </CardTitle>
-                            <CardDescription className="text-xs">
-                                Large horizontal banner shown at the top of your detailed profile page.
+                            <CardDescription className="text-xs space-y-1.5 flex flex-col items-start">
+                                <span>Large horizontal banner shown at the top of your detailed profile page.</span>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-900/10 text-stone-900 border border-stone-900/15 font-semibold text-[11px]">
+                                    📐 Recommended: 16:9 Landscape (1200 × 675 px or 1920 × 1080 px)
+                                </span>
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="p-5 flex flex-col items-center justify-center space-y-4">

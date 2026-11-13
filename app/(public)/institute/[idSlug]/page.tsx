@@ -1839,11 +1839,11 @@ export default async function InstitutePage({ params }: PageProps) {
                     key={simInst.id}
                     className="group flex flex-col rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                   >
-                    <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100 relative">
+                    <div className="aspect-[4/3] w-full overflow-hidden bg-slate-50 relative flex items-center justify-center p-4">
                       <img
                         src={simDisplayLogo}
                         alt={simInst.name}
-                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500"
                       />
                       {simInst.isVerified && (
                         <div className="absolute top-3 left-3 z-10">

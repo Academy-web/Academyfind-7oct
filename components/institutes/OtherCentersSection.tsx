@@ -129,11 +129,11 @@ export function OtherCentersSection({
               href={centerUrl}
               className="group flex flex-col rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-sm hover:shadow-2xl hover:border-amber-300 hover:-translate-y-1.5 transition-all duration-300"
             >
-              <div className="aspect-[16/10] w-full overflow-hidden bg-slate-100 relative">
+              <div className="aspect-[16/10] w-full overflow-hidden bg-slate-50 relative flex items-center justify-center p-3">
                 <img
                   src={displayImage}
                   alt={center.name}
-                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500"
                 />
 
                 {center.isVerified && (
@@ -240,12 +240,12 @@ export function OtherCentersSection({
                     onClick={() => setModalOpen(false)}
                     className="flex items-center gap-3.5 p-3.5 rounded-2xl border border-slate-200/80 bg-white hover:border-amber-400 hover:shadow-md transition-all group"
                   >
-                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 relative">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-50 border border-slate-200 shrink-0 relative flex items-center justify-center p-1">
                       <Image
                         src={displayImage}
                         alt={center.name}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform"
+                        className="object-contain p-1 group-hover:scale-105 transition-transform"
                       />
                     </div>
                     <div className="flex-1 min-w-0">

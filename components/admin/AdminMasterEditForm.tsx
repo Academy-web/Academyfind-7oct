@@ -181,11 +181,16 @@ export default function MasterEditForm({ institute, allCities, allCategories, cu
                             <CardTitle className="flex items-center gap-2 text-base text-stone-800">
                                 <ImageIcon className="w-5 h-5 text-stone-800" /> Logo / Display Image
                             </CardTitle>
+                            <CardDescription className="text-xs mt-1 text-stone-500 flex items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-medium text-[11px]">
+                                    📐 1:1 Square (500 × 500 px)
+                                </span>
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="p-5 flex flex-col items-center justify-center space-y-4">
                             <div className="w-full h-44 rounded-2xl border border-stone-200 bg-stone-50 flex items-center justify-center overflow-hidden relative shadow-inner p-3 text-center">
                                 {showActualImage ? (
-                                    <img src={imagePreview} alt="Institute Logo" className="w-full h-full object-cover absolute inset-0" />
+                                    <img src={imagePreview} alt="Institute Logo" className="w-full h-full object-contain p-2 absolute inset-0" />
                                 ) : (
                                     <div className="text-sm text-stone-400 flex flex-col items-center gap-2 z-10">
                                         <ImageIcon className="w-7 h-7 text-stone-300"/> 
@@ -205,11 +210,16 @@ export default function MasterEditForm({ institute, allCities, allCategories, cu
                             <CardTitle className="flex items-center gap-2 text-base text-stone-800">
                                 <ImageIcon className="w-5 h-5 text-amber-600" /> Cover / Banner Image
                             </CardTitle>
+                            <CardDescription className="text-xs mt-1 text-stone-500 flex items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 text-stone-800 border border-stone-200 font-medium text-[11px]">
+                                    📐 16:9 Landscape (1200 × 675 px / 1920 × 1080 px)
+                                </span>
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="p-5 flex flex-col items-center justify-center space-y-4">
                             <div className="w-full h-44 rounded-2xl border border-stone-200 bg-stone-50 flex items-center justify-center overflow-hidden relative shadow-inner p-3 text-center">
                                 {showActualCover ? (
-                                    <img src={coverPreview} alt="Institute Cover" className="w-full h-full object-cover absolute inset-0" />
+                                    <img src={coverPreview} alt="Institute Cover" className="w-full h-full object-contain p-2 absolute inset-0" />
                                 ) : (
                                     <div className="text-sm text-stone-400 flex flex-col items-center gap-2 z-10">
                                         <ImageIcon className="w-7 h-7 text-stone-300"/> 
