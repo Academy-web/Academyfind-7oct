@@ -45,9 +45,6 @@ import { UnlockBasicFeaturesOverlay } from "@/components/institutes/UnlockBasicF
 import { VerifiedBadge } from "@/components/institutes/VerifiedBadge";
 import { NoticeBoardSection } from "@/components/notices/NoticeBoardSection";
 import { OtherCentersSection } from "@/components/institutes/OtherCentersSection";
-import { InstituteBatchBuySection } from "@/components/batchbuy/InstituteBatchBuySection";
-import { getPublicCohorts } from "@/lib/batchbuy/cohortQueries";
-import { resolveEffectiveDiscountSlabs } from "@/lib/batchbuy/slabResolver";
 
 export const revalidate = 3600; // ISR: cache pages for 1 hour — critical for Googlebot TTFB
 
@@ -212,8 +209,6 @@ export default async function InstitutePage({ params }: PageProps) {
     publicNotices,
     totalPublicNotices,
     hubMemberships,
-    activeBatchBuyCohorts,
-    instituteDefaultSlabs,
   ] = await Promise.all([
     userId
       ? prisma.instituteMembership.findMany({
@@ -419,8 +414,6 @@ export default async function InstitutePage({ params }: PageProps) {
         },
       },
     }),
-    getPublicCohorts({ instituteId: id, status: "ALL_ACTIVE", limit: 6 }),
-    resolveEffectiveDiscountSlabs(id, null),
   ]);
 
   // Sibling centers from all connected hubs
@@ -1211,33 +1204,6 @@ export default async function InstitutePage({ params }: PageProps) {
             </div>
           </section>
         )}
-
-        {/* 🪙 BATCHBUY GROUP ADMISSIONS */}
-        <InstituteBatchBuySection
-          institute={{
-            id: institute.id,
-            name: institute.name,
-            slug: institute.slug ?? null,
-            cityName: institute.city.name,
-            logo: institute.logo ?? null,
-            verified: Boolean(institute.isVerified),
-            batches: activeBatches.map((b: any) => ({
-              id: b.id,
-              name: b.name,
-              courseName: b.courseName ?? null,
-              academicYear: b.academicYear ?? null,
-              fee: b.fee ?? null,
-              mode: b.mode,
-            })),
-            hasSlabs: instituteDefaultSlabs.slabs.length > 0,
-          }}
-          cohorts={activeBatchBuyCohorts}
-          defaultSlabs={instituteDefaultSlabs}
-          isLoggedIn={Boolean(userId)}
-          accountPhoneVerified={Boolean(userDetails?.phoneVerified)}
-          profilePrefill={userDetails?.studentProfile ?? undefined}
-          institutePath={`/institute/${properSlug}`}
-        />
 
         {/* 🚀 STUDENTS & TEACHERS (COMMUNITY) */}
         <section>
