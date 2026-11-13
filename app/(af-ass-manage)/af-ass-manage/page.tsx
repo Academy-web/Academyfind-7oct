@@ -22,56 +22,80 @@ export default async function AdminDashboardPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [
-        totalUsers,
-        totalInstitutes,
-        totalCategories,
-        pendingClaimsCount,
-        pendingCallbacks,
-        pendingLifeCoach,
-        pendingChatReports,
-        pendingInstituteRequests,
-        pendingBlogs,
-        recentClaims,
-        recentUsers,
-        gaData
-    ] = await Promise.all([
-        prisma.user.count(),
-        prisma.institute.count(),
-        prisma.category.count(),
-        prisma.instituteClaim.count({ where: { status: "PENDING" } }),
-        prisma.instituteEnquiry.count({ where: { status: "NEW", isForwarded: false } }),
-        prisma.lifeCoachRequest.count({ where: { status: "PENDING" } }),
-        prisma.messageReport.count({ where: { status: "PENDING" } }),
-        prisma.instituteRequest.count({ where: { status: "PENDING" } }),
-        prisma.blogPost.count({ where: { status: { in: ["PENDING_REVIEW", "CONTACTED"] } } }),
-
-        // Latest 5 Pending Claims
-        prisma.instituteClaim.findMany({
-            where: { status: "PENDING" },
-            orderBy: { createdAt: 'desc' },
-            take: 5,
-            include: { institute: { select: { name: true } } }
-        }),
-
-        // Latest 5 Registered Users
-        prisma.user.findMany({
-            orderBy: { createdAt: 'desc' },
-            take: 5,
-            select: { id: true, name: true, email: true, role: true, createdAt: true }
-        }),
-
-        // Fetch GA4 Data safely without blocking admin dashboard
-        Promise.race([
-            getTrafficData(),
-            new Promise<any>(resolve => setTimeout(() => resolve({ error: 'timeout' }), 1500))
-        ]).catch(() => ({ error: 'failed' }))
-    ]);
-
-    // Get today's GA4 traffic (last item in chartData array usually)
+    let totalUsers = 0;
+    let totalInstitutes = 0;
+    let totalCategories = 0;
+    let pendingClaimsCount = 0;
+    let pendingCallbacks = 0;
+    let pendingLifeCoach = 0;
+    let pendingChatReports = 0;
+    let pendingInstituteRequests = 0;
+    let pendingBlogs = 0;
+    let recentClaims: any[] = [];
+    let recentUsers: any[] = [];
     let todayVisitorsCount = 0;
-    if (gaData && !('error' in gaData) && 'chartData' in gaData && Array.isArray(gaData.chartData) && gaData.chartData.length > 0) {
-        todayVisitorsCount = gaData.chartData[gaData.chartData.length - 1].visitors || 0;
+
+    try {
+        const [
+            usersCount,
+            institutesCount,
+            categoriesCount,
+            claimsCount,
+            callbacksCount,
+            lifeCoachCount,
+            chatReportsCount,
+            instRequestsCount,
+            blogsCount,
+            claimsList,
+            usersList,
+            gaData
+        ] = await Promise.all([
+            prisma.user.count().catch(() => 0),
+            prisma.institute.count().catch(() => 0),
+            prisma.category.count().catch(() => 0),
+            prisma.instituteClaim.count({ where: { status: "PENDING" } }).catch(() => 0),
+            prisma.instituteEnquiry.count({ where: { status: "NEW", isForwarded: false } }).catch(() => 0),
+            prisma.lifeCoachRequest.count({ where: { status: "PENDING" } }).catch(() => 0),
+            prisma.messageReport.count({ where: { status: "PENDING" } }).catch(() => 0),
+            prisma.instituteRequest.count({ where: { status: "PENDING" } }).catch(() => 0),
+            prisma.blogPost.count({ where: { status: { in: ["PENDING_REVIEW", "CONTACTED"] } } }).catch(() => 0),
+
+            // Latest 5 Pending Claims
+            prisma.instituteClaim.findMany({
+                where: { status: "PENDING" },
+                orderBy: { createdAt: 'desc' },
+                take: 5,
+                include: { institute: { select: { name: true } } }
+            }).catch(() => []),
+
+            // Latest 5 Registered Users
+            prisma.user.findMany({
+                orderBy: { createdAt: 'desc' },
+                take: 5,
+                select: { id: true, name: true, email: true, role: true, createdAt: true }
+            }).catch(() => []),
+
+            // Fetch GA4 Data safely without blocking admin dashboard
+            getTrafficData().catch(() => ({ error: 'failed' }))
+        ]);
+
+        totalUsers = usersCount;
+        totalInstitutes = institutesCount;
+        totalCategories = categoriesCount;
+        pendingClaimsCount = claimsCount;
+        pendingCallbacks = callbacksCount;
+        pendingLifeCoach = lifeCoachCount;
+        pendingChatReports = chatReportsCount;
+        pendingInstituteRequests = instRequestsCount;
+        pendingBlogs = blogsCount;
+        recentClaims = claimsList;
+        recentUsers = usersList;
+
+        if (gaData && !('error' in gaData) && 'chartData' in gaData && Array.isArray(gaData.chartData) && gaData.chartData.length > 0) {
+            todayVisitorsCount = gaData.chartData[gaData.chartData.length - 1].visitors || 0;
+        }
+    } catch (err) {
+        console.warn('Non-fatal AdminDashboardPage data fetch error:', err);
     }
 
     return (

@@ -31,80 +31,88 @@ export async function getSearchConsoleData() {
   }
 
   const fetchPromise = (async () => {
-    const auth = new google.auth.GoogleAuth(
-      process.env.GOOGLE_CLIENT_EMAIL && process.env.GOOGLE_PRIVATE_KEY
-        ? {
-            credentials: {
-              client_email: formatEnvVar(process.env.GOOGLE_CLIENT_EMAIL),
-              private_key: formatEnvVar(process.env.GOOGLE_PRIVATE_KEY),
-            },
-            scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
-          }
-        : {
-            scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
-          }
-    );
+    try {
+      const auth = new google.auth.GoogleAuth(
+        process.env.GOOGLE_CLIENT_EMAIL && process.env.GOOGLE_PRIVATE_KEY
+          ? {
+              credentials: {
+                client_email: formatEnvVar(process.env.GOOGLE_CLIENT_EMAIL),
+                private_key: formatEnvVar(process.env.GOOGLE_PRIVATE_KEY),
+              },
+              scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
+            }
+          : {
+              scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
+            }
+      );
 
-    const webmasters = google.webmasters({ version: 'v3', auth });
+      const webmasters = google.webmasters({ version: 'v3', auth });
 
-    // 1. Get Traffic Stats (Clicks/Impressions)
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30); // Last 30 days
+      // 1. Get Traffic Stats (Clicks/Impressions)
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30); // Last 30 days
 
-    const response = await webmasters.searchanalytics.query({
-      siteUrl,
-      requestBody: {
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        dimensions: ['date'],
-      },
-    });
+      const response = await webmasters.searchanalytics.query({
+        siteUrl,
+        requestBody: {
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+          dimensions: ['date'],
+        },
+      });
 
-    const rows = response.data.rows || [];
-    const totalClicks = rows.reduce((acc, row) => acc + (row.clicks || 0), 0);
-    const totalImpressions = rows.reduce((acc, row) => acc + (row.impressions || 0), 0);
+      const rows = response.data.rows || [];
+      const totalClicks = rows.reduce((acc, row) => acc + (row.clicks || 0), 0);
+      const totalImpressions = rows.reduce((acc, row) => acc + (row.impressions || 0), 0);
 
-    // Calculate Average Position
-    const avgPosition =
-      rows.length > 0
-        ? rows.reduce((acc, row) => acc + (row.position || 0), 0) / rows.length
-        : 0;
+      // Calculate Average Position
+      const avgPosition =
+        rows.length > 0
+          ? rows.reduce((acc, row) => acc + (row.position || 0), 0) / rows.length
+          : 0;
 
-    // 2. Get Sitemap Data to find Submitted Pages
-    const sitemaps = await webmasters.sitemaps.list({ siteUrl });
-    let totalSubmitted = 0;
+      // 2. Get Sitemap Data to find Submitted Pages
+      const sitemaps = await webmasters.sitemaps.list({ siteUrl });
+      let totalSubmitted = 0;
 
-    if (sitemaps.data.sitemap) {
-      for (const sitemap of sitemaps.data.sitemap) {
-        if (sitemap.contents) {
-          for (const content of sitemap.contents) {
-            totalSubmitted += parseInt(content.submitted as string) || 0;
+      if (sitemaps.data.sitemap) {
+        for (const sitemap of sitemaps.data.sitemap) {
+          if (sitemap.contents) {
+            for (const content of sitemap.contents) {
+              totalSubmitted += parseInt(content.submitted as string) || 0;
+            }
           }
         }
       }
+
+      const result = {
+        success: true,
+        overview: {
+          totalClicks,
+          totalImpressions,
+          avgPosition: parseFloat(avgPosition.toFixed(1)),
+          totalSubmitted,
+        },
+        chartData: rows.map((row) => ({
+          date: row.keys?.[0] || '',
+          clicks: row.clicks || 0,
+          impressions: row.impressions || 0,
+        })),
+      };
+
+      cachedGscData = result;
+      lastGscFetchTime = Date.now();
+      lastGscErrorData = null;
+      return result;
+    } catch (err: any) {
+      console.warn('GSC query caught error:', err?.message || err);
+      const fallback = { error: err?.message || 'GSC fetch failed' };
+      lastGscErrorData = fallback;
+      lastGscErrorTime = Date.now();
+      return fallback;
     }
-
-    const result = {
-      success: true,
-      overview: {
-        totalClicks,
-        totalImpressions,
-        avgPosition: parseFloat(avgPosition.toFixed(1)),
-        totalSubmitted,
-      },
-      chartData: rows.map((row) => ({
-        date: row.keys?.[0] || '',
-        clicks: row.clicks || 0,
-        impressions: row.impressions || 0,
-      })),
-    };
-
-    cachedGscData = result;
-    lastGscFetchTime = Date.now();
-    lastGscErrorData = null;
-    return result;
-  })();
+  })().catch((err: any) => ({ error: err?.message || 'GSC unhandled rejection caught' }));
 
   const timeoutPromise = new Promise<{ error: string }>((resolve) =>
     setTimeout(

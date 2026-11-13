@@ -48,100 +48,114 @@ export async function getTrafficData() {
     return lastErrorData;
   }
 
-  const client = getAnalyticsClient();
+  let client: BetaAnalyticsDataClient;
+  try {
+    client = getAnalyticsClient();
+  } catch (err: any) {
+    console.warn('GA4 client initialization failed:', err?.message || err);
+    return { error: 'Failed to initialize Google Analytics client' };
+  }
 
   const fetchPromise = (async () => {
-    // Run reports in parallel to cut latency
-    const [overviewRes, trendRes, topPagesRes, channelsRes] = await Promise.all([
-      client.runReport({
-        property: `properties/${propertyId}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        metrics: [
-          { name: 'activeUsers' },
-          { name: 'screenPageViews' },
-          { name: 'sessions' },
-        ],
-      }),
-      client.runReport({
-        property: `properties/${propertyId}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'date' }],
-        metrics: [{ name: 'activeUsers' }],
-        orderBys: [{ dimension: { dimensionName: 'date' }, desc: false }],
-      }),
-      client.runReport({
-        property: `properties/${propertyId}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
-        metrics: [{ name: 'screenPageViews' }],
-        orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
-        limit: 10,
-      }),
-      client.runReport({
-        property: `properties/${propertyId}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'sessionDefaultChannelGroup' }],
-        metrics: [{ name: 'sessions' }],
-        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-      }),
-    ]);
+    try {
+      // Run reports in parallel to cut latency
+      const [overviewRes, trendRes, topPagesRes, channelsRes] = await Promise.all([
+        client.runReport({
+          property: `properties/${propertyId}`,
+          dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+          metrics: [
+            { name: 'activeUsers' },
+            { name: 'screenPageViews' },
+            { name: 'sessions' },
+          ],
+        }),
+        client.runReport({
+          property: `properties/${propertyId}`,
+          dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+          dimensions: [{ name: 'date' }],
+          metrics: [{ name: 'activeUsers' }],
+          orderBys: [{ dimension: { dimensionName: 'date' }, desc: false }],
+        }),
+        client.runReport({
+          property: `properties/${propertyId}`,
+          dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+          dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
+          metrics: [{ name: 'screenPageViews' }],
+          orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+          limit: 10,
+        }),
+        client.runReport({
+          property: `properties/${propertyId}`,
+          dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+          dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+          metrics: [{ name: 'sessions' }],
+          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+        }),
+      ]);
 
-    const overviewResponse = overviewRes[0];
-    const trendResponse = trendRes[0];
-    const topPagesResponse = topPagesRes[0];
-    const channelsResponse = channelsRes[0];
+      const overviewResponse = overviewRes[0];
+      const trendResponse = trendRes[0];
+      const topPagesResponse = topPagesRes[0];
+      const channelsResponse = channelsRes[0];
 
-    const overview = overviewResponse?.rows?.[0]?.metricValues || [];
+      const overview = overviewResponse?.rows?.[0]?.metricValues || [];
 
-    const chartData =
-      trendResponse?.rows?.map((row) => {
-        const dateStr = row.dimensionValues?.[0]?.value || '';
-        const formattedDate =
-          dateStr.length === 8
-            ? `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`
-            : dateStr;
+      const chartData =
+        trendResponse?.rows?.map((row) => {
+          const dateStr = row.dimensionValues?.[0]?.value || '';
+          const formattedDate =
+            dateStr.length === 8
+              ? `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`
+              : dateStr;
 
-        return {
-          date: formattedDate,
-          visitors: parseInt(row.metricValues?.[0]?.value || '0', 10),
-        };
-      }) || [];
+          return {
+            date: formattedDate,
+            visitors: parseInt(row.metricValues?.[0]?.value || '0', 10),
+          };
+        }) || [];
 
-    const topPages =
-      topPagesResponse?.rows?.map((row) => ({
-        path: row.dimensionValues?.[0]?.value || '',
-        title: row.dimensionValues?.[1]?.value || '',
-        views: parseInt(row.metricValues?.[0]?.value || '0', 10),
-      })) || [];
+      const topPages =
+        topPagesResponse?.rows?.map((row) => ({
+          path: row.dimensionValues?.[0]?.value || '',
+          title: row.dimensionValues?.[1]?.value || '',
+          views: parseInt(row.metricValues?.[0]?.value || '0', 10),
+        })) || [];
 
-    const channels =
-      channelsResponse?.rows?.map((row) => ({
-        name: row.dimensionValues?.[0]?.value || 'Unknown',
-        value: parseInt(row.metricValues?.[0]?.value || '0', 10),
-      })) || [];
+      const channels =
+        channelsResponse?.rows?.map((row) => ({
+          name: row.dimensionValues?.[0]?.value || 'Unknown',
+          value: parseInt(row.metricValues?.[0]?.value || '0', 10),
+        })) || [];
 
-    const result = {
-      success: true,
-      overview: {
-        activeUsers: overview[0]?.value || '0',
-        pageViews: overview[1]?.value || '0',
-        sessions: overview[2]?.value || '0',
-      },
-      chartData,
-      topPages,
-      channels,
-    };
+      const result = {
+        success: true,
+        overview: {
+          activeUsers: overview[0]?.value || '0',
+          pageViews: overview[1]?.value || '0',
+          sessions: overview[2]?.value || '0',
+        },
+        chartData,
+        topPages,
+        channels,
+      };
 
-    cachedTrafficData = result;
-    lastFetchTime = Date.now();
-    lastErrorData = null;
-    return result;
-  })();
+      cachedTrafficData = result;
+      lastFetchTime = Date.now();
+      lastErrorData = null;
+      return result;
+    } catch (err: any) {
+      console.warn('GA4 runReport caught error:', err?.message || err);
+      const fallback = { error: err?.message || 'GA4 fetch failed' };
+      lastErrorData = fallback;
+      lastErrorTime = Date.now();
+      return fallback;
+    }
+  })().catch((err: any) => ({ error: err?.message || 'GA4 unhandled rejection caught' }));
 
   const timeoutPromise = new Promise<{ error: string }>((resolve) =>
     setTimeout(
       () => resolve({ error: 'GA4 API request timed out (Google service unreachable)' }),
-      3000
+      2500
     )
   );
 
