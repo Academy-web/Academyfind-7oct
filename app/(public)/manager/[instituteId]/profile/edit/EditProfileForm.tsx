@@ -233,7 +233,7 @@ export default function EditProfileForm({
     return (
         <div className="space-y-10 w-full mx-auto pb-32">
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8 w-full max-w-full min-w-0">
 
                 {/* 📸 IMAGE UPLOAD SECTION — Logo + Cover, side by side */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -314,7 +314,7 @@ export default function EditProfileForm({
 
                 {/* 📋 SHADCN TABS FOR DETAILS */}
                 <Tabs defaultValue="general" className="w-full">
-                    <TabsList className="flex w-full bg-stone-100 p-1 rounded-xl mb-6 h-auto overflow-x-auto scrollbar-hide snap-x justify-start lg:justify-between items-center gap-1">
+                    <TabsList className="flex w-full bg-stone-100 p-1.5 rounded-xl mb-6 h-auto overflow-x-auto scrollbar-thin scrollbar-thumb-stone-300 snap-x justify-start items-center gap-1.5 max-w-full">
                         <TabsTrigger value="general" className="rounded-lg py-2 px-4 whitespace-nowrap snap-start">General Info</TabsTrigger>
                         <TabsTrigger value="features" className="rounded-lg py-2 px-4 whitespace-nowrap text-amber-700 data-[state=active]:bg-amber-100 snap-start"><Sparkles className="w-4 h-4 mr-1" /> Features & Stats</TabsTrigger>
                         <TabsTrigger value="location" className="rounded-lg py-2 px-4 whitespace-nowrap snap-start">Location & Contact</TabsTrigger>
@@ -376,7 +376,7 @@ export default function EditProfileForm({
                                 <div className="space-y-2 pt-2 border-t mt-4">
                                     <Label>Tagged Categories</Label>
                                     <p className="text-xs text-stone-500">Select the courses and exams you teach.</p>
-                                    <div className="h-48 overflow-y-auto border border-stone-200 rounded-xl p-3 bg-stone-50 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    <div className="h-48 overflow-y-auto border border-stone-200 rounded-xl p-3 bg-stone-50 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 w-full">
                                         {allCategories?.map((cat: any) => {
                                             const isSelected = selectedCategories.includes(cat.id);
                                             return (
@@ -755,8 +755,8 @@ export default function EditProfileForm({
                 </Tabs>
 
                 {/* Sticky Save Bar */}
-                <div className="sticky bottom-4 z-20 flex justify-end">
-                    <Button type="submit" disabled={isLoading} className="bg-stone-800 hover:bg-stone-900 text-white rounded-2xl gap-2 px-8 py-6 shadow-xl shadow-blue-600/30">
+                <div className="sticky bottom-4 z-20 flex justify-end w-full pt-4">
+                    <Button type="submit" disabled={isLoading} className="bg-stone-800 hover:bg-stone-900 text-white rounded-2xl gap-2 px-6 sm:px-8 py-5 sm:py-6 shadow-xl shadow-stone-900/20 max-w-full">
                         {isLoading ? "Saving Details..." : <><Save className="w-4 h-4" /> Save General Details</>}
                     </Button>
                 </div>

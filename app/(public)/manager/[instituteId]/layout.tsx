@@ -186,11 +186,11 @@ export default async function ManagerDashBoardLayout({
     }
 
     return (
-        <div className="relative bg-[#f9f6f0] min-h-screen pb-12 selection:bg-[#ebdbb7]/40 selection:text-stone-900 font-sans">
+        <div className="relative bg-[#f9f6f0] min-h-screen pb-12 selection:bg-[#ebdbb7]/40 selection:text-stone-900 font-sans overflow-x-hidden w-full max-w-full">
             {/* Grainy Noise Overlay */}
             <div className="pointer-events-none fixed inset-0 z-50 h-full w-full opacity-[0.035] mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
 
-            <div className="w-full max-w-[1600px] mx-auto pt-4 lg:pt-6 px-4 lg:px-8 flex flex-col lg:flex-row gap-6 lg:gap-8 relative z-10">
+            <div className="w-full max-w-[1600px] mx-auto pt-4 lg:pt-6 px-3 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-6 lg:gap-8 relative z-10 min-w-0">
 
                 {/* --- SIDEBAR --- */}
                 <ManagerSidebarWrapper title={institute.name}>
@@ -346,7 +346,7 @@ export default async function ManagerDashBoardLayout({
                 </ManagerSidebarWrapper>
 
                 {/* --- MAIN CONTENT AREA --- */}
-                <main className="flex-1 bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 lg:p-10 min-h-[calc(100vh-4rem)]">
+                <main className="flex-1 min-w-0 max-w-full bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-4 sm:p-6 lg:p-8 min-h-[calc(100vh-4rem)] overflow-hidden">
                     <SubscriptionExpiryBanner
                         instituteId={instituteId}
                         instituteName={institute.name}
