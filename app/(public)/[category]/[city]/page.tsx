@@ -81,10 +81,11 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const currentYear = new Date().getFullYear();
   const currentPage = page && parseInt(page, 10) > 1 ? parseInt(page, 10) : null;
 
-  // Page 1 → clean URL, page 2+ → self-referential with ?page=
-  const canonicalUrl = currentPage
-    ? `https://academyfind.com/${category}/${city}?page=${currentPage}`
-    : `https://academyfind.com/${category}/${city}`;
+  const isFirstPage = currentPage === null || currentPage === 1;
+
+  // Clean canonical for page 1; consolidate paginated pages (page 2+) to the master page 1
+  // This concentrates 100% of internal PageRank and Google ranking power on the main hub
+  const canonicalUrl = `https://academyfind.com/${category}/${city}`;
 
   const seoTitle = currentPage
     ? `Best ${categoryName} in ${cityName} - Page ${currentPage} | AcademyFind`
@@ -99,16 +100,16 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     description: seoDescription,
 
     alternates: {
-      canonical: canonicalUrl,  // ← self-referential now
+      canonical: canonicalUrl,
     },
 
-    // Index ALL pages — paginated pages contain unique institute listings
-    // noindex was hiding 90%+ of institute listings from Google
+    // Index main page 1 for maximum ranking authority; set noindex, follow on paginated pages
+    // to prevent thin paginated bloat while letting Googlebot discover all institutes.
     robots: {
-      index: true,
+      index: isFirstPage,
       follow: true,
       googleBot: {
-        index: true,
+        index: isFirstPage,
         follow: true,
         "max-snippet": -1,
         "max-image-preview": "large",

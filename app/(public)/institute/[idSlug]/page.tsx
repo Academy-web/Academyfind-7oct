@@ -45,6 +45,9 @@ import { UnlockBasicFeaturesOverlay } from "@/components/institutes/UnlockBasicF
 import { VerifiedBadge } from "@/components/institutes/VerifiedBadge";
 import { NoticeBoardSection } from "@/components/notices/NoticeBoardSection";
 import { OtherCentersSection } from "@/components/institutes/OtherCentersSection";
+import { InstituteBatchBuySection } from "@/components/batchbuy/InstituteBatchBuySection";
+import { getPublicCohorts } from "@/lib/batchbuy/cohortQueries";
+import { resolveEffectiveDiscountSlabs } from "@/lib/batchbuy/slabResolver";
 
 export const revalidate = 3600; // ISR: cache pages for 1 hour — critical for Googlebot TTFB
 
@@ -87,9 +90,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!institute) return { title: "Institute Not Found | AcademyFind" };
 
+  // Quality check: Prevent thin, ghost institutes from polluting Google's index.
+  // A profile is indexable if it has real-world viability signals:
+  // (verified status, custom description, google ratings/reviews, phone, website, email, or batches)
+  const isViableForIndexing = Boolean(
+    institute.isVerified ||
+    (institute.description && institute.description.trim().length > 25) ||
+    (institute.googleRating && institute.googleRating > 0) ||
+    (institute.googleReviewCount && institute.googleReviewCount > 0) ||
+    (institute.reviews && institute.reviews.length > 0) ||
+    institute.phone ||
+    institute.website ||
+    institute.email
+  );
+
   const currentYear = new Date().getFullYear();
-  const title = institute.metaTitle || `${institute.name} ${institute.city.name} - Fees, Reviews, Admission & Contact ${currentYear}`;
-  const description = institute.metaDescription || institute.description?.substring(0, 155) || `Get complete details about ${institute.name} in ${institute.city.name}. Check ${currentYear} fee structure, read genuine student reviews, and get admission guidance. ⚡ Click to learn more.`;
+  const title = institute.metaTitle || `${institute.name}, ${institute.city.name} - Courses, Contact & Admission ${currentYear}`;
+  const defaultDesc = `Explore ${institute.name} in ${institute.city.name}. Get course details, contact options, location directions, and admission guidance on AcademyFind.`;
+  const description = institute.metaDescription || (institute.description && institute.description.trim().length > 30 ? institute.description.substring(0, 155) : defaultDesc);
 
   const safeOgImage = getSafeImageUrl(institute.logo, institute.imageUrl);
   const properSlug = institute.slug ? `${institute.id}-${institute.slug}` : institute.id;
@@ -113,10 +131,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     robots: {
-      index: true,
+      index: isViableForIndexing,
       follow: true,
       googleBot: {
-        index: true,
+        index: isViableForIndexing,
         follow: true,
         "max-snippet": -1,
         "max-image-preview": "large",
@@ -161,7 +179,19 @@ export default async function InstitutePage({ params }: PageProps) {
   if (userId) {
     userDetails = await prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true, phone: true, email: true },
+      select: {
+        name: true,
+        phone: true,
+        email: true,
+        phoneVerified: true,
+        studentProfile: {
+          select: {
+            targetExam: true,
+            targetYear: true,
+            currentClass: true,
+          },
+        },
+      },
     });
   }
 
@@ -182,6 +212,8 @@ export default async function InstitutePage({ params }: PageProps) {
     publicNotices,
     totalPublicNotices,
     hubMemberships,
+    activeBatchBuyCohorts,
+    instituteDefaultSlabs,
   ] = await Promise.all([
     userId
       ? prisma.instituteMembership.findMany({
@@ -387,6 +419,8 @@ export default async function InstitutePage({ params }: PageProps) {
         },
       },
     }),
+    getPublicCohorts({ instituteId: id, status: "ALL_ACTIVE", limit: 6 }),
+    resolveEffectiveDiscountSlabs(id, null),
   ]);
 
   // Sibling centers from all connected hubs
@@ -586,6 +620,8 @@ export default async function InstitutePage({ params }: PageProps) {
   };
 
   let faqSchema: any = null;
+  const categoriesList = institute.categories.map((c: any) => c.category?.name).filter(Boolean).join(", ") || "academic & professional courses";
+
   if (institute.faqs && institute.faqs.length > 0) {
     faqSchema = {
       "@context": "https://schema.org",
@@ -598,6 +634,38 @@ export default async function InstitutePage({ params }: PageProps) {
           "text": faq.answer
         }
       }))
+    };
+  } else {
+    // Generate automated, high-intent educational FAQ schema for SERP rich snippets
+    faqSchema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": `Where is ${institute.name} located in ${institute.city.name}?`,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": `${institute.name} is located at ${institute.address || institute.city.name}. It is easily accessible for students in and around ${institute.city.name}.`
+          }
+        },
+        {
+          "@type": "Question",
+          "name": `What courses or coaching are offered at ${institute.name}?`,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": `${institute.name} offers specialized coaching and training programs in ${categoriesList}.`
+          }
+        },
+        {
+          "@type": "Question",
+          "name": `How can students contact ${institute.name} for admissions and fee details?`,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": `Students and parents can request an admission callback, inquire about fee discounts, or get demo class assistance directly on AcademyFind.`
+          }
+        }
+      ]
     };
   }
 
@@ -863,15 +931,24 @@ export default async function InstitutePage({ params }: PageProps) {
                   {institute.hasCertification && <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 border border-green-100 text-green-700 text-xs font-bold"><Check className="w-3.5 h-3.5" /> Certification</span>}
                 </div>
 
-                {/* About Section (Dynamic SEO) */}
+                {/* About Section (Dynamic SEO & Context Enrichment) */}
                 <div className="mt-6 p-5 md:p-6 bg-gradient-to-br from-amber-50/50 to-amber-100/30 border border-amber-100/80 rounded-3xl text-sm md:text-base space-y-4 shadow-sm">
                   <p className="leading-relaxed text-amber-950 font-medium">
-                    Looking for the best {institute.categories[0]?.category.name || "Coaching"} in {institute.city.name}? <strong className="text-slate-900 font-bold">{institute.name}</strong> is a top-rated choice, known for its excellent results. {displayRating > 0 ? `With a rating of ${displayRating} stars from ${displayReviewCount} students, they` : "They"} offer comprehensive programs tailored to help students succeed.
+                    Looking for the best {institute.categories[0]?.category.name || "Coaching"} in {institute.city.name}? <strong className="text-slate-900 font-bold">{institute.name}</strong> is a top-rated choice, known for its academic dedication. {displayRating > 0 ? `With an average rating of ${displayRating} stars from ${displayReviewCount} student reviews, they` : "They"} offer structured programs tailored to help learners succeed.
                   </p>
-                  {institute.description && (
+                  {institute.description ? (
                     <p className="leading-relaxed text-amber-900/90 pt-3 border-t border-amber-200/50">
                       {institute.description}
                     </p>
+                  ) : (
+                    <div className="pt-3 border-t border-amber-200/50 text-xs sm:text-sm text-amber-900/80 space-y-2.5">
+                      <p>
+                        Conveniently located at <strong className="font-semibold text-slate-800">{institute.address || institute.city.name}</strong>, {institute.name} provides tailored guidance, expert mentorship, and concept clarity for students pursuing {institute.categories.map((c: any) => c.category?.name).filter(Boolean).join(", ") || "competitive and academic excellence"}.
+                      </p>
+                      <p>
+                        Interested students and guardians can explore course details, check demo session availability, or submit a direct inquiry below to connect with admissions.
+                      </p>
+                    </div>
                   )}
                 </div>
 
@@ -1134,6 +1211,33 @@ export default async function InstitutePage({ params }: PageProps) {
             </div>
           </section>
         )}
+
+        {/* 🪙 BATCHBUY GROUP ADMISSIONS */}
+        <InstituteBatchBuySection
+          institute={{
+            id: institute.id,
+            name: institute.name,
+            slug: institute.slug ?? null,
+            cityName: institute.city.name,
+            logo: institute.logo ?? null,
+            verified: Boolean(institute.isVerified),
+            batches: activeBatches.map((b: any) => ({
+              id: b.id,
+              name: b.name,
+              courseName: b.courseName ?? null,
+              academicYear: b.academicYear ?? null,
+              fee: b.fee ?? null,
+              mode: b.mode,
+            })),
+            hasSlabs: instituteDefaultSlabs.slabs.length > 0,
+          }}
+          cohorts={activeBatchBuyCohorts}
+          defaultSlabs={instituteDefaultSlabs}
+          isLoggedIn={Boolean(userId)}
+          accountPhoneVerified={Boolean(userDetails?.phoneVerified)}
+          profilePrefill={userDetails?.studentProfile ?? undefined}
+          institutePath={`/institute/${properSlug}`}
+        />
 
         {/* 🚀 STUDENTS & TEACHERS (COMMUNITY) */}
         <section>

@@ -11,7 +11,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const skip = pageId * limit;
 
   const institutes = await prisma.institute.findMany({
-    where: { isActive: true, isPublished: true },
+    where: {
+      isActive: true,
+      isPublished: true,
+      OR: [
+        { isVerified: true },
+        { description: { not: null } },
+        { googleRating: { gt: 0 } },
+        { googleReviewCount: { gt: 0 } },
+        { reviews: { some: {} } },
+        { phone: { not: null } },
+        { website: { not: null } },
+        { email: { not: null } },
+        { batches: { some: {} } }
+      ]
+    },
     select: { id: true, slug: true, updatedAt: true },
     skip: skip,
     take: limit,

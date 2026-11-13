@@ -5,12 +5,28 @@ export const revalidate = 86400; // Cache sitemap index for 24 hours
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://academyfind.com';
 
+  const indexableFilter = {
+    isActive: true,
+    isPublished: true,
+    OR: [
+      { isVerified: true },
+      { description: { not: null } },
+      { googleRating: { gt: 0 } },
+      { googleReviewCount: { gt: 0 } },
+      { reviews: { some: {} } },
+      { phone: { not: null } },
+      { website: { not: null } },
+      { email: { not: null } },
+      { batches: { some: {} } }
+    ]
+  };
+
   const [totalInstitutes, latestInstitute, latestBlog] = await Promise.all([
     prisma.institute.count({
-      where: { isActive: true, isPublished: true } 
+      where: indexableFilter 
     }),
     prisma.institute.findFirst({
-      where: { isActive: true, isPublished: true },
+      where: indexableFilter,
       orderBy: { updatedAt: 'desc' },
       select: { updatedAt: true }
     }),

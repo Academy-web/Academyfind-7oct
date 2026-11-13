@@ -22,18 +22,17 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
   if (!city) return { title: "Not Found" };
 
-  const canonicalUrl = page && page !== "1" 
-    ? `https://academyfind.com/directory/${citySlug}?page=${page}`
-    : `https://academyfind.com/directory/${citySlug}`;
+  const isFirstPage = !page || page === "1";
+  const canonicalUrl = `https://academyfind.com/directory/${citySlug}`;
 
   return {
     title: `Top Coaching Institutes & Tutors in ${city.name} - AcademyFind`,
     description: `Explore the complete directory of verified coaching institutes, schools, and tutors in ${city.name}. Read reviews and find the best educational centers near you.`,
     robots: {
-      index: true,
+      index: isFirstPage,
       follow: true,
       googleBot: {
-        index: true,
+        index: isFirstPage,
         follow: true,
         "max-snippet": -1,
         "max-image-preview": "large",
