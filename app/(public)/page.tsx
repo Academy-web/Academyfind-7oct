@@ -119,7 +119,59 @@ function JsonLdSchemas() {
     ]
   };
 
-  // c) Homepage FAQ Schema (Because you have an FAQSection component)
+  // c) SiteNavigationElement Schema (Explicitly guides Google Sitelinks generation)
+  const siteNavigationSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "AcademyFind Main Navigation",
+    description: "Primary directory sections and comparison tools on AcademyFind",
+    itemListElement: [
+      {
+        "@type": "SiteNavigationElement",
+        position: 1,
+        name: "Browse All Coaching Centers",
+        description: "Filter by city, category, fees, and ratings to find the right academy across India.",
+        url: `${baseUrl}/categories`
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 2,
+        name: "Compare Coaching Centers",
+        description: "Compare up to 3 coaching centers side-by-side on fees, courses, ratings, and faculty.",
+        url: `${baseUrl}/compare`
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 3,
+        name: "About AcademyFind",
+        description: "Learn about AcademyFind — India's platform to discover and connect with top learning academies.",
+        url: `${baseUrl}/about`
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 4,
+        name: "Explore Institutes by City",
+        description: "Discover verified coaching centers and tuition classes organized by state and city.",
+        url: `${baseUrl}/cities`
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 5,
+        name: "BatchBuy Group Discounts",
+        description: "Join verified student admission cohorts to unlock exclusive collective tuition fee discounts.",
+        url: `${baseUrl}/batchbuy`
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 6,
+        name: "Education Blog & Exam Guides",
+        description: "Read student advice, exam preparation tips, career guidance, and syllabus updates.",
+        url: `${baseUrl}/blog`
+      }
+    ]
+  };
+
+  // d) Homepage FAQ Schema (Because you have an FAQSection component)
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -162,6 +214,11 @@ function JsonLdSchemas() {
         id="schema-organization"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+      <Script
+        id="schema-site-navigation"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(siteNavigationSchema) }}
       />
       <Script
         id="schema-home-faq"

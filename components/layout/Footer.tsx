@@ -270,6 +270,38 @@ export function Footer() {
               "
             >
               <Link
+                href="/categories"
+                prefetch={false}
+                className="transition-colors hover:text-foreground font-medium"
+              >
+                All Categories
+              </Link>
+
+              <Link
+                href="/compare"
+                prefetch={false}
+                className="transition-colors hover:text-foreground font-medium"
+              >
+                Compare Centers
+              </Link>
+
+              <Link
+                href="/cities"
+                prefetch={false}
+                className="transition-colors hover:text-foreground font-medium"
+              >
+                Cities & Hubs
+              </Link>
+
+              <Link
+                href="/batchbuy"
+                prefetch={false}
+                className="transition-colors hover:text-foreground font-medium"
+              >
+                BatchBuy
+              </Link>
+
+              <Link
                 href="/about"
                 prefetch={false}
                 className="transition-colors hover:text-foreground"
