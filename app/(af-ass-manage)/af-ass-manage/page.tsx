@@ -61,13 +61,16 @@ export default async function AdminDashboardPage() {
             select: { id: true, name: true, email: true, role: true, createdAt: true }
         }),
 
-        // Fetch GA4 Data
-        getTrafficData()
+        // Fetch GA4 Data safely without blocking admin dashboard
+        Promise.race([
+            getTrafficData(),
+            new Promise<any>(resolve => setTimeout(() => resolve({ error: 'timeout' }), 1500))
+        ]).catch(() => ({ error: 'failed' }))
     ]);
 
     // Get today's GA4 traffic (last item in chartData array usually)
     let todayVisitorsCount = 0;
-    if (!('error' in gaData) && 'chartData' in gaData && Array.isArray(gaData.chartData) && gaData.chartData.length > 0) {
+    if (gaData && !('error' in gaData) && 'chartData' in gaData && Array.isArray(gaData.chartData) && gaData.chartData.length > 0) {
         todayVisitorsCount = gaData.chartData[gaData.chartData.length - 1].visitors || 0;
     }
 
