@@ -143,30 +143,30 @@ function JsonLdSchemas() {
       {
         "@type": "SiteNavigationElement",
         position: 3,
-        name: "About AcademyFind",
-        description: "Learn about AcademyFind — India's platform to discover and connect with top learning academies.",
-        url: `${baseUrl}/about`
-      },
-      {
-        "@type": "SiteNavigationElement",
-        position: 4,
         name: "Explore Institutes by City",
         description: "Discover verified coaching centers and tuition classes organized by state and city.",
         url: `${baseUrl}/cities`
       },
       {
         "@type": "SiteNavigationElement",
+        position: 4,
+        name: "Education Blog & Exam Guides",
+        description: "Read student advice, exam preparation tips, career guidance, and syllabus updates.",
+        url: `${baseUrl}/blog`
+      },
+      {
+        "@type": "SiteNavigationElement",
         position: 5,
-        name: "BatchBuy Group Discounts",
-        description: "Join verified student admission cohorts to unlock exclusive collective tuition fee discounts.",
-        url: `${baseUrl}/batchbuy`
+        name: "About AcademyFind",
+        description: "Learn about AcademyFind — India's platform to discover and connect with top learning academies.",
+        url: `${baseUrl}/about`
       },
       {
         "@type": "SiteNavigationElement",
         position: 6,
-        name: "Education Blog & Exam Guides",
-        description: "Read student advice, exam preparation tips, career guidance, and syllabus updates.",
-        url: `${baseUrl}/blog`
+        name: "Contact & Admission Support",
+        description: "Get in touch with AcademyFind student counselors for admission assistance and inquiries.",
+        url: `${baseUrl}/contact`
       }
     ]
   };

@@ -294,14 +294,6 @@ export function Footer() {
               </Link>
 
               <Link
-                href="/batchbuy"
-                prefetch={false}
-                className="transition-colors hover:text-foreground font-medium"
-              >
-                BatchBuy
-              </Link>
-
-              <Link
                 href="/about"
                 prefetch={false}
                 className="transition-colors hover:text-foreground"
