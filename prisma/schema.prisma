@@ -109,6 +109,23 @@ model User {
   acquiredBooks             BookListing[]                     @relation("BuyerBookListings")
   authoredNotices           InstituteNotice[]                 @relation("NoticeAuthor")
   createdHubs               InstituteHub[]                    @relation("HubCreator")
+  createdDiscountSlabs      GroupDiscountSlab[]               @relation("SlabCreator")
+  updatedDiscountSlabs      GroupDiscountSlab[]               @relation("SlabUpdater")
+  createdCohorts            GroupAdmissionCohort[]            @relation("CreatedCohorts")
+  cohortMemberships         GroupCohortMember[]
+  createdCohortOffers       CohortOffer[]                     @relation("OfferCreator")
+  publishedCohortOffers     CohortOffer[]                     @relation("OfferPublisher")
+  cohortOfferDecisions         GroupOfferDecision[]
+  admissionVouchers            AdmissionVoucher[]
+  createdBatchBuyAgreements    InstituteBatchBuyAgreement[]      @relation("AgreementCreator")
+  acceptedBatchBuyAgreements   InstituteBatchBuyAgreement[]      @relation("AgreementAcceptor")
+  redeemedVouchers             AdmissionVoucher[]                @relation("VoucherRedeemer")
+  reviewedAttributions         BatchBuyAttribution[]             @relation("AttributionReviewer")
+  createdCommissionInvoices    BatchBuyCommissionInvoice[]       @relation("InvoiceCreator")
+  recordedCommissionPayments   CommissionPaymentRecord[]         @relation("CommissionPaymentRecorder")
+  verifiedCommissionPayments   CommissionPaymentRecord[]         @relation("CommissionPaymentVerifier")
+  createdBatchBuyCreditNotes   BatchBuyCreditNote[]              @relation("CreditNoteCreator")
+  batchBuyAuditLogs            BatchBuyAuditLog[]                @relation("BatchBuyAuditActor")
 
   @@map("user")
 }
@@ -450,6 +467,16 @@ model Institute {
   ismAssignments          InstituteSalesManagerAssignment[]
   admissionRecords        AdmissionRecord[]
   ismInviteRequests       IsmInviteRequest[]
+  discountSlabs             GroupDiscountSlab[]
+  admissionCohorts          GroupAdmissionCohort[]
+  cohortOffers              CohortOffer[]
+  admissionVouchers         AdmissionVoucher[]
+  batchBuyAgreements        InstituteBatchBuyAgreement[]
+  batchBuyAttributions      BatchBuyAttribution[]
+  commissionLedgerEntries   CommissionLedgerEntry[]
+  commissionInvoices        BatchBuyCommissionInvoice[]
+  batchBuyCreditNotes       BatchBuyCreditNote[]
+  batchBuyAuditLogs         BatchBuyAuditLog[]
 
   studentRecords StudentInstituteRecord[]
   teacherRecords TeacherInstituteRecord[]
@@ -693,6 +720,7 @@ model InstituteEnquiry {
   comments               EnquiryComment[]
   ismActivities          IsmLeadActivity[]
   admissionRecord        AdmissionRecord?
+  batchBuyAttributions   BatchBuyAttribution[]
 
   @@index([instituteId])
   @@index([assignedSalesManagerId])
@@ -956,6 +984,7 @@ model Conversation {
   participants ConversationParticipant[]
   messages     Message[]
   lastMessage  Message?                  @relation("LastMessage", fields: [lastMessageId], references: [id])
+  admissionCohort GroupAdmissionCohort?
 
   @@unique([instituteId, channelType])
   @@index([type])
@@ -1580,6 +1609,12 @@ model InstituteBatch {
   teacherMembers BatchTeacher[]
 
   conversations Conversation[]
+
+  discountSlabs GroupDiscountSlab[]
+  admissionCohorts GroupAdmissionCohort[]
+  cohortOffers      CohortOffer[]
+  admissionVouchers AdmissionVoucher[]
+  admissionRecords  AdmissionRecord[]
 
   @@index([instituteId])
   @@map("institute_batch")
@@ -2895,26 +2930,43 @@ model IsmLeadActivity {
 }
 
 model AdmissionRecord {
-  id            String           @id @default(cuid())
-  enquiryId     String           @unique
-  instituteId   String
-  ismId         String
-  studentName   String
-  courseName    String?
-  totalFee      Float            @default(0)
-  paidAmount    Float            @default(0)
-  feeStatus     String           @default("PENDING") // PENDING, PARTIAL, PAID
-  admissionNote String?          @db.Text
-  admissionDate DateTime         @default(now())
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  enquiry       InstituteEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
-  institute     Institute        @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  ism           User             @relation("IsmAdmissions", fields: [ismId], references: [id])
-  installments  FeeInstallment[]
+  id                          String                  @id @default(cuid())
+  enquiryId                   String                  @unique
+  instituteId                 String
+  ismId                       String
+  batchId                     String?
+  batchBuyVoucherId           String?                 @unique
+  studentName                 String
+  courseName                  String?
+  totalFee                    Float                   @default(0)
+  paidAmount                  Float                   @default(0)
+  batchBuyLockedFee           Decimal?                @db.Decimal(12, 2)
+  batchBuySettledFee          Decimal?                @db.Decimal(12, 2)
+  feeStatus                   String                  @default("PENDING") // PENDING, PARTIAL, PAID
+  status                      AdmissionLifecycleStatus @default(CONFIRMED)
+  admissionNote               String?                 @db.Text
+  admissionDate               DateTime                @default(now())
+  cancelledAt                 DateTime?
+  cancellationReason          String?                 @db.Text
+  directRefundRequiredAmount  Decimal?                @db.Decimal(12, 2)
+  directRefundStatus          String? // NONE, PENDING_INSTITUTE_REFUND, REFUNDED
+  createdAt                   DateTime                @default(now())
+  updatedAt                   DateTime                @updatedAt
+
+  enquiry             InstituteEnquiry       @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  institute           Institute              @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  ism                 User                   @relation("IsmAdmissions", fields: [ismId], references: [id])
+  batch               InstituteBatch?        @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  batchBuyVoucher     AdmissionVoucher?      @relation(fields: [batchBuyVoucherId], references: [id], onDelete: Restrict)
+  installments        FeeInstallment[]
+  batchBuyAttribution BatchBuyAttribution?
+  commissionEntry     CommissionLedgerEntry?
+  batchBuyCreditNotes BatchBuyCreditNote[]
 
   @@index([instituteId])
   @@index([ismId])
+  @@index([batchId])
+  @@index([status])
   @@map("admission_record")
 }
 
@@ -3049,3 +3101,658 @@ model InstituteHubMember {
   @@index([instituteId])
   @@map("institute_hub_member")
 }
+
+// ============================================================================
+// ACADEMYFIND BATCHBUY™: SLICE 1 - GROUP DISCOUNT SLAB CONFIGURATOR
+// ============================================================================
+
+enum SlabFallbackPolicy {
+  ABSORB_SHORTFALL
+  REVERT_TO_LOWER_SLAB
+  CANCEL_DISCOUNT
+}
+
+model GroupDiscountSlab {
+  id                 String             @id @default(cuid())
+  instituteId        String
+  batchId            String?            // Optional: null = institute-wide, non-null = batch-specific override
+  minStudents        Int                // e.g., 5
+  maxStudents        Int?               // e.g., 9 (null means open-ended upper limit)
+  discountPercentage Decimal            @db.Decimal(5, 2) // e.g., 8.00 = 8.00%
+  waiveRegistration  Boolean            @default(true)
+  includedPerks      String[]           @default([])
+  fallbackPolicy     SlabFallbackPolicy @default(ABSORB_SHORTFALL)
+  notes              String?            @db.Text
+  isActive           Boolean            @default(true)
+  isArchived         Boolean            @default(false)
+  createdById        String?
+  updatedById        String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  institute          Institute          @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  batch              InstituteBatch?    @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  createdBy          User?              @relation("SlabCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy          User?              @relation("SlabUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  cohortOffers       CohortOffer[]
+
+  @@index([instituteId, isActive, isArchived])
+  @@index([batchId, isActive, isArchived])
+  @@map("group_discount_slab")
+}
+
+// ============================================================================
+// ACADEMYFIND BATCHBUY™: SLICE 2 - COHORT CREATION, JOINING & DISCOVERY
+// ============================================================================
+
+enum CohortStatus {
+  DRAFT
+  FORMING
+  OFFER_PENDING
+  OFFER_ACTIVE
+  ADMISSION_OPEN
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum CohortMemberStage {
+  INTERESTED
+  INTENT_VERIFIED
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+  VOUCHER_ISSUED
+  ENROLLED_AT_CENTER
+  DROPPED
+}
+
+model GroupAdmissionCohort {
+  id                  String              @id @default(cuid())
+  cohortCode          String              @unique // E.g., "BB-ALLEN-KOTA-701"
+  title               String
+  instituteId         String
+  batchId             String
+  examCategory        String              // E.g. "JEE", "NEET", "UPSC"
+  targetAcademicYear  Int                 // E.g. 2026, 2027
+  
+  targetSize          Int                 @default(10)
+  minRequired         Int                 @default(5)
+  maxCapacity         Int                 @default(25)
+  status              CohortStatus        @default(FORMING)
+  
+  formingExpiresAt    DateTime
+  admissionDeadlineAt DateTime?
+  
+  createdById         String
+  conversationId      String?             @unique
+  
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  institute           Institute           @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  batch               InstituteBatch      @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  createdBy           User                @relation("CreatedCohorts", fields: [createdById], references: [id])
+  conversation        Conversation?       @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  members             GroupCohortMember[]
+  offers              CohortOffer[]
+  offerDecisions      GroupOfferDecision[]
+  vouchers            AdmissionVoucher[]
+  attributions        BatchBuyAttribution[]
+
+  @@index([instituteId, status])
+  @@index([batchId, status])
+  @@index([examCategory, status])
+  @@map("group_admission_cohort")
+}
+
+model GroupCohortMember {
+  id                 String               @id @default(cuid())
+  cohortId           String
+  userId             String
+  stage              CohortMemberStage    @default(INTERESTED)
+  
+  // Three-Level Intent Verification
+  phoneVerified      Boolean              @default(false)
+  profileConfirmed   Boolean              @default(false)
+  explicitIntentAt   DateTime?
+  
+  // Minor & Parental Awareness / Consent (DPDPA 2023)
+  isMinor                 Boolean              @default(false)
+  parentName              String?
+  parentPhone             String?
+  parentNotifiedAt        DateTime?
+  parentConsentVerifiedAt DateTime?
+  parentConsentMethod     String?
+  
+  joinedAt           DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  cohort             GroupAdmissionCohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offerDecisions     GroupOfferDecision[]
+  vouchers           AdmissionVoucher[]
+  attributions       BatchBuyAttribution[]
+
+  @@unique([cohortId, userId])
+  @@index([userId, stage])
+  @@index([cohortId, stage])
+  @@map("group_cohort_member")
+}
+
+// ============================================================================
+// ACADEMYFIND BATCHBUY™: SLICE 3 - VERSIONED OFFERS, DECISIONS & VOUCHERS
+// ============================================================================
+
+enum CohortOfferStatus {
+  DRAFT
+  PUBLISHED
+  QUORUM_MET
+  SUPERSEDED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum OfferDecisionType {
+  ACCEPTED
+  DECLINED
+}
+
+enum VoucherStatus {
+  PENDING_QUORUM
+  ACTIVE
+  EXPIRED
+  REVOKED
+  REDEEMED
+}
+
+model CohortOffer {
+  id                  String             @id @default(cuid())
+  cohortId            String
+  instituteId         String
+  batchId             String
+  version             Int
+  sourceSlabId        String?
+  status              CohortOfferStatus  @default(DRAFT)
+
+  // Locked Commercial Terms & Monetary Breakdown (immutable once PUBLISHED+)
+  title                   String
+  baseFee                 Decimal            @db.Decimal(12, 2)
+  registrationFeeOriginal Decimal            @default(0) @db.Decimal(10, 2)
+  waiveRegistration       Boolean            @default(true)
+  discountPercentage      Decimal            @db.Decimal(5, 2)
+  discountAmount          Decimal            @db.Decimal(12, 2)
+  netPayableTuition       Decimal            @db.Decimal(12, 2)
+  includedPerks           String[]           @default([])
+  fallbackPolicy          SlabFallbackPolicy @default(ABSORB_SHORTFALL)
+  paymentTerms            String?            @db.Text
+  additionalNotes         String?            @db.Text
+
+  // Separate Dual Quorums (Acceptance Quorum vs Center Admission Quorum)
+  minAcceptanceQuorum Int
+  minAdmissionQuorum  Int
+
+  // Versioned Commercial Agreement Snapshot (Slice 4)
+  commissionAgreementId         String?
+  commissionRatePctSnapshot     Decimal?          @db.Decimal(5, 2)
+  commissionTierSnapshot        BatchBuyRateTier?
+  attributionWindowDaysSnapshot Int               @default(30)
+  holdingPeriodDaysSnapshot     Int               @default(15)
+
+  // Lifecycle & Audit Timestamps
+  offerExpiresAt   DateTime
+  voucherExpiresAt DateTime
+  publishedAt      DateTime?
+  quorumMetAt      DateTime?
+  supersededAt     DateTime?
+  withdrawnAt      DateTime?
+  createdById      String
+  publishedById    String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  cohort              GroupAdmissionCohort        @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  institute           Institute                   @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  batch               InstituteBatch              @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  sourceSlab          GroupDiscountSlab?          @relation(fields: [sourceSlabId], references: [id], onDelete: SetNull)
+  commissionAgreement InstituteBatchBuyAgreement? @relation(fields: [commissionAgreementId], references: [id], onDelete: Restrict)
+  createdBy           User                        @relation("OfferCreator", fields: [createdById], references: [id])
+  publishedBy         User?                       @relation("OfferPublisher", fields: [publishedById], references: [id])
+
+  decisions    GroupOfferDecision[]
+  vouchers     AdmissionVoucher[]
+  attributions BatchBuyAttribution[]
+
+  @@unique([cohortId, version])
+  @@index([cohortId, status])
+  @@index([instituteId, status])
+  @@index([batchId])
+  @@map("cohort_offer")
+}
+
+model GroupOfferDecision {
+  id                        String            @id @default(cuid())
+  offerId                   String
+  cohortId                  String
+  cohortMemberId            String
+  userId                    String
+  decision                  OfferDecisionType
+  declineReason             String?           @db.Text
+  revalidatedIntentAt       DateTime
+  guardianConsentVerifiedAt DateTime?
+  decidedAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+
+  offer        CohortOffer          @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  cohort       GroupAdmissionCohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  cohortMember GroupCohortMember    @relation(fields: [cohortMemberId], references: [id], onDelete: Cascade)
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voucher      AdmissionVoucher?
+
+  @@unique([offerId, cohortMemberId])
+  @@unique([offerId, userId])
+  @@index([cohortId, decision])
+  @@index([userId])
+  @@map("group_offer_decision")
+}
+
+model AdmissionVoucher {
+  id                          String             @id @default(cuid())
+  voucherCode                 String             @unique
+  tokenHash                   String             @unique
+  securityNonce               String             @unique
+  offerId                     String
+  offerVersion                Int
+  decisionId                  String             @unique
+  cohortId                    String
+  cohortMemberId              String
+  userId                      String
+  instituteId                 String
+  batchId                     String
+  status                      VoucherStatus      @default(PENDING_QUORUM)
+
+  // Immutable Fee & Contract Snapshot
+  baseFee                     Decimal            @db.Decimal(12, 2)
+  registrationFeeOriginal     Decimal            @db.Decimal(10, 2)
+  waiveRegistration           Boolean
+  discountPercentage          Decimal            @db.Decimal(5, 2)
+  discountAmount              Decimal            @db.Decimal(12, 2)
+  netPayableTuition           Decimal            @db.Decimal(12, 2)
+  includedPerks               String[]           @default([])
+  fallbackPolicy              SlabFallbackPolicy
+  minAcceptanceQuorumSnapshot Int
+  minAdmissionQuorumSnapshot  Int
+  studentNameSnapshot         String
+  instituteNameSnapshot       String
+  batchNameSnapshot           String
+
+  issuedAt     DateTime  @default(now())
+  activatedAt  DateTime?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  revokeReason String?
+
+  // Slice 4: Center Redemption & Two-Stage Quorum Settlement
+  redeemedAt                    DateTime?
+  redeemedById                  String?
+  redemptionMethod              String?                // QR_SCAN | MANUAL_CODE
+  settlementState               VoucherSettlementState @default(UNSETTLED)
+  disclosedFallbackFee          Decimal?               @db.Decimal(12, 2)
+  settledTuition                Decimal?               @db.Decimal(12, 2)
+  shortfallDisclosureAcceptedAt DateTime?
+  fallbackConsentRequestedAt    DateTime?
+  fallbackConsentRespondedAt    DateTime?
+  fallbackConsentAccepted       Boolean?
+
+  updatedAt DateTime @updatedAt
+
+  offer           CohortOffer            @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  decision        GroupOfferDecision     @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  cohort          GroupAdmissionCohort   @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  cohortMember    GroupCohortMember      @relation(fields: [cohortMemberId], references: [id], onDelete: Cascade)
+  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  redeemedBy      User?                  @relation("VoucherRedeemer", fields: [redeemedById], references: [id], onDelete: SetNull)
+  institute       Institute              @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  batch           InstituteBatch         @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  admissionRecord AdmissionRecord?
+  attribution     BatchBuyAttribution?
+  commissionEntry CommissionLedgerEntry?
+
+  @@unique([offerId, cohortMemberId])
+  @@unique([offerId, userId])
+  @@index([userId, status])
+  @@index([instituteId, status])
+  @@index([cohortId, status])
+  @@index([offerId, settlementState])
+  @@map("admission_voucher")
+}
+
+// ============================================================================
+// ACADEMYFIND BATCHBUY™: SLICE 4 - REDEMPTION, ATTRIBUTION & COMMISSION LEDGER
+// ============================================================================
+
+enum AdmissionLifecycleStatus {
+  CONFIRMED
+  PENDING_FALLBACK_CONSENT
+  CANCELLED
+  REFUNDED
+}
+
+enum VoucherSettlementState {
+  UNSETTLED
+  PROVISIONAL_QUORUM_OPEN
+  SETTLED_FULL_DISCOUNT
+  SETTLED_SHORTFALL_ABSORBED
+  PENDING_STUDENT_FALLBACK_CONSENT
+  SETTLED_FALLBACK_ACCEPTED
+  CANCELLED_ON_SHORTFALL
+  CANCELLED_AFTER_REDEMPTION
+}
+
+enum AgreementStatus {
+  DRAFT
+  ACTIVE
+  SUPERSEDED
+  EXPIRED
+  TERMINATED
+}
+
+enum BatchBuyRateTier {
+  PARTNER_2_PCT
+  STANDARD_3_PCT
+  NON_PARTNER_4_PCT
+}
+
+enum AttributionSourceType {
+  VOUCHER_REDEMPTION
+  COHORT_LEAD_MATCH
+  BYPASS_RECOVERED
+}
+
+enum AttributionVerificationStatus {
+  VERIFIED
+  FLAGGED_SUSPECTED_BYPASS
+  CONFIRMED_BYPASS
+  DISPUTED
+  DISMISSED_FALSE_POSITIVE
+}
+
+enum CommissionHoldStatus {
+  HOLD_PERIOD
+  ELIGIBLE
+  INVOICED
+  SETTLED
+  VOIDED_COOLING_OFF
+  CLAWED_BACK
+  DISPUTED
+}
+
+enum CommissionInvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  DISPUTED
+  VOID
+}
+
+enum CommissionCreditNoteStatus {
+  ISSUED
+  APPLIED_TO_INVOICE
+  REFUND_PENDING
+  REFUNDED
+  VOID
+}
+
+enum CommissionCreditNoteReason {
+  COOLING_OFF_CANCELLATION
+  POST_HOLD_CLAWBACK
+  FALLBACK_DECLINED
+  DISPUTE_ADJUSTMENT
+}
+
+model InstituteBatchBuyAgreement {
+  id                          String           @id @default(cuid())
+  instituteId                 String
+  version                     Int
+  status                      AgreementStatus  @default(DRAFT)
+  rateTier                    BatchBuyRateTier
+  commissionRatePct           Decimal          @db.Decimal(5, 2) // 2.00, 3.00, or 4.00
+  gstRatePct                  Decimal          @default(18.00) @db.Decimal(5, 2)
+  gstTreatmentNote            String           @db.Text
+  sacCode                     String?          // Pending CA validation before production invoicing
+  sacValidatedByCa            Boolean          @default(false)
+  caValidatorName             String?
+  caMembershipNumber          String?
+  caValidatedAt               DateTime?
+  caValidationNote            String?          @db.Text
+  caValidationDocUrl          String?
+  attributionWindowDays       Int              @default(30)
+  holdingPeriodDays           Int              @default(15)
+  paymentDueDays              Int              @default(15)
+  commissionBaseRule          String           @default("SETTLED_TUITION_ONLY")
+  cancellationClawbackPolicy  String           @db.Text
+  effectiveFrom               DateTime
+  effectiveTo                 DateTime?
+  acceptedAt                  DateTime?
+  acceptedById                String?
+  acceptedRepresentativeName  String?
+  acceptedDesignation         String?
+  createdById                 String
+  createdAt                   DateTime         @default(now())
+  updatedAt                   DateTime         @updatedAt
+
+  institute        Institute               @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  createdBy        User                    @relation("AgreementCreator", fields: [createdById], references: [id])
+  acceptedBy       User?                   @relation("AgreementAcceptor", fields: [acceptedById], references: [id], onDelete: SetNull)
+  cohortOffers     CohortOffer[]
+  commissionEntries CommissionLedgerEntry[]
+
+  @@unique([instituteId, version])
+  @@index([instituteId, status, effectiveFrom, effectiveTo])
+  @@map("institute_batchbuy_agreement")
+}
+
+model BatchBuyAttribution {
+  id                        String                        @id @default(cuid())
+  instituteId               String
+  cohortId                  String?
+  offerId                   String?
+  cohortMemberId            String?
+  userId                    String?
+  voucherId                 String?                       @unique
+  admissionId               String                        @unique
+  enquiryId                 String
+  sourceType                AttributionSourceType
+  matchStatus               AttributionVerificationStatus @default(VERIFIED)
+  attributionWindowDaysUsed Int                           @default(30)
+  evidenceJson              Json?
+  reviewedById              String?
+  reviewedAt                DateTime?
+  reviewNote                String?                       @db.Text
+  createdAt                 DateTime                      @default(now())
+  updatedAt                 DateTime                      @updatedAt
+
+  institute    Institute             @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  cohort       GroupAdmissionCohort? @relation(fields: [cohortId], references: [id], onDelete: SetNull)
+  offer        CohortOffer?          @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  cohortMember GroupCohortMember?    @relation(fields: [cohortMemberId], references: [id], onDelete: SetNull)
+  voucher      AdmissionVoucher?     @relation(fields: [voucherId], references: [id], onDelete: Restrict)
+  admission    AdmissionRecord       @relation(fields: [admissionId], references: [id], onDelete: Cascade)
+  enquiry      InstituteEnquiry      @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  reviewedBy   User?                 @relation("AttributionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  commission   CommissionLedgerEntry?
+
+  @@index([instituteId, matchStatus])
+  @@index([cohortId])
+  @@index([userId])
+  @@map("batchbuy_attribution")
+}
+
+model CommissionLedgerEntry {
+  id                       String               @id @default(cuid())
+  instituteId              String
+  agreementId              String?
+  admissionId              String               @unique
+  voucherId                String?              @unique
+  attributionId            String               @unique
+  invoiceId                String?
+  commissionableTuition    Decimal              @db.Decimal(12, 2) // Strictly settled tuition only (excl. reg fee, hostel, optional perks)
+  excludedNonTuitionAmount Decimal              @default(0) @db.Decimal(12, 2)
+  excludedChargesNote      String?              @db.Text
+  commissionBaseRule       String               @default("SETTLED_TUITION_ONLY")
+  commissionRatePct        Decimal              @db.Decimal(5, 2) // Locked 2.00, 3.00, or 4.00
+  commissionAmount         Decimal              @db.Decimal(12, 2) // AcademyFind Net Revenue (Ex-GST)
+  gstRatePct               Decimal              @default(18.00) @db.Decimal(5, 2)
+  gstAmount                Decimal              @db.Decimal(12, 2) // Segregated GST Liability
+  totalPayableAmount       Decimal              @db.Decimal(12, 2) // commissionAmount + gstAmount
+  status                   CommissionHoldStatus @default(HOLD_PERIOD)
+  redeemedAt               DateTime
+  holdEndsAt               DateTime             // redeemedAt + 15 days commercial cooling-off
+  maturedAt                DateTime?
+  voidReason               String?              @db.Text
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+
+  institute   Institute                   @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  agreement   InstituteBatchBuyAgreement? @relation(fields: [agreementId], references: [id], onDelete: Restrict)
+  admission   AdmissionRecord             @relation(fields: [admissionId], references: [id], onDelete: Cascade)
+  voucher     AdmissionVoucher?           @relation(fields: [voucherId], references: [id], onDelete: Restrict)
+  attribution BatchBuyAttribution         @relation(fields: [attributionId], references: [id], onDelete: Restrict)
+  invoice     BatchBuyCommissionInvoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  creditNote  BatchBuyCreditNote?
+
+  @@index([instituteId, status])
+  @@index([holdEndsAt, status])
+  @@index([invoiceId])
+  @@map("batchbuy_commission_ledger")
+}
+
+model BatchBuyCommissionInvoice {
+  id                      String                  @id @default(cuid())
+  invoiceNumber           String                  @unique
+  instituteId             String
+  periodStart             DateTime
+  periodEnd               DateTime
+  issuedAt                DateTime?
+  dueAt                   DateTime?
+  dueDaysUsed             Int                     @default(15)
+  subtotalCommission      Decimal                 @db.Decimal(12, 2) // Pure AcademyFind Revenue (Ex-GST)
+  cgstAmount              Decimal                 @default(0) @db.Decimal(12, 2)
+  sgstAmount              Decimal                 @default(0) @db.Decimal(12, 2)
+  igstAmount              Decimal                 @default(0) @db.Decimal(12, 2)
+  gstTotalAmount          Decimal                 @db.Decimal(12, 2) // Segregated Tax Liability
+  totalPayableAmount      Decimal                 @db.Decimal(12, 2) // subtotalCommission + gstTotalAmount
+  amountPaid              Decimal                 @default(0) @db.Decimal(12, 2)
+  taxTreatmentMode        String                  @default("PENDING_CA_VALIDATION") // PENDING_CA_VALIDATION | INTRA_STATE_CGST_SGST | INTER_STATE_IGST
+  sacCodeUsed             String?
+  sacValidationDisclaimer String?                 @db.Text
+  instituteGstinSnapshot  String?
+  academyFindGstin        String?
+  status                  CommissionInvoiceStatus @default(DRAFT)
+  notes                   String?                 @db.Text
+  createdById             String
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  institute   Institute                 @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  createdBy   User                      @relation("InvoiceCreator", fields: [createdById], references: [id])
+  entries     CommissionLedgerEntry[]
+  payments    CommissionPaymentRecord[]
+  creditNotes BatchBuyCreditNote[]
+
+  @@index([instituteId, status])
+  @@index([dueAt, status])
+  @@map("batchbuy_commission_invoice")
+}
+
+model BatchBuyCreditNote {
+  id                       String                     @id @default(cuid())
+  creditNoteNumber         String                     @unique
+  idempotencyKey           String                     @unique
+  instituteId              String?
+  instituteIdSnapshot      String
+  invoiceId                String
+  commissionEntryId        String                     @unique
+  admissionId              String
+  reasonType               CommissionCreditNoteReason
+  status                   CommissionCreditNoteStatus @default(ISSUED)
+  originalLedgerStatus     CommissionHoldStatus
+  originalInvoiceStatus    CommissionInvoiceStatus
+  commissionReversalAmount Decimal                    @db.Decimal(12, 2)
+  cgstReversalAmount       Decimal                    @default(0) @db.Decimal(12, 2)
+  sgstReversalAmount       Decimal                    @default(0) @db.Decimal(12, 2)
+  igstReversalAmount       Decimal                    @default(0) @db.Decimal(12, 2)
+  gstReversalTotal         Decimal                    @db.Decimal(12, 2)
+  totalCreditAmount        Decimal                    @db.Decimal(12, 2)
+  appliedToInvoiceBalance  Decimal                    @default(0) @db.Decimal(12, 2)
+  refundPayableToInstitute Decimal                    @default(0) @db.Decimal(12, 2)
+  taxTreatmentModeUsed     String
+  sacCodeUsed              String?
+  reason                   String                     @db.Text
+  createdById              String
+  settledRefundUtr         String?                    @unique
+  settledRefundAt          DateTime?
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+
+  institute       Institute?                @relation(fields: [instituteId], references: [id], onDelete: SetNull)
+  invoice         BatchBuyCommissionInvoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  commissionEntry CommissionLedgerEntry     @relation(fields: [commissionEntryId], references: [id], onDelete: Restrict)
+  admission       AdmissionRecord           @relation(fields: [admissionId], references: [id], onDelete: Restrict)
+  createdBy       User                      @relation("CreditNoteCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([instituteId, status])
+  @@index([invoiceId])
+  @@index([admissionId])
+  @@map("batchbuy_credit_note")
+}
+
+model CommissionPaymentRecord {
+  id             String    @id @default(cuid())
+  invoiceId      String
+  amount         Decimal   @db.Decimal(12, 2)
+  paymentMode    String    // NEFT | RTGS | IMPS | UPI_B2B | RAZORPAY_B2B_LINK | CHEQUE
+  utrOrReference String    @unique
+  paidAt         DateTime
+  recordedById   String
+  verifiedById   String?
+  verifiedAt     DateTime?
+  note           String?   @db.Text
+  createdAt      DateTime  @default(now())
+
+  invoice    BatchBuyCommissionInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  recordedBy User                      @relation("CommissionPaymentRecorder", fields: [recordedById], references: [id])
+  verifiedBy User?                     @relation("CommissionPaymentVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@map("batchbuy_commission_payment")
+}
+
+model BatchBuyAuditLog {
+  id                  String   @id @default(cuid())
+  instituteId         String?
+  instituteIdSnapshot String?
+  actorUserId         String
+  actorRole           String
+  action              String   // VOUCHER_REDEEMED | AGREEMENT_ACTIVATED | FALLBACK_CONSENT_ACCEPTED | ADMISSION_CANCELLED | BYPASS_FLAGGED | INVOICE_ISSUED | PAYMENT_RECORDED | CREDIT_NOTE_ISSUED
+  entityType          String
+  entityId            String
+  beforeState         Json?
+  afterState          Json?
+  reason              String?  @db.Text
+  metadata            Json?
+  createdAt           DateTime @default(now())
+
+  institute Institute? @relation(fields: [instituteId], references: [id], onDelete: SetNull)
+  actor     User       @relation("BatchBuyAuditActor", fields: [actorUserId], references: [id])
+
+  @@index([instituteId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action, createdAt])
+  @@map("batchbuy_audit_log")
+}
+
+
+

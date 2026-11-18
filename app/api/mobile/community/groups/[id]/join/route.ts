@@ -20,13 +20,14 @@ export async function POST(
     const group = await prisma.conversation.findUnique({
       where: { id },
       include: {
+        admissionCohort: { select: { id: true } },
         participants: {
           where: { userId },
         },
       },
     });
 
-    if (!group) {
+    if (!group || !group.isStudyGroup || group.visibility !== 'PUBLIC' || group.admissionCohort) {
       return NextResponse.json(
         { success: false, error: 'Study group not found' },
         { status: 404 }

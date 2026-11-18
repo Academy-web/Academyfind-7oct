@@ -1,7 +1,7 @@
 import { ManagerSidebarWrapper } from "@/components/manager/ManagerSidebarWrapper";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
-import { ArrowLeft, ArrowRight, BarChart2, BarChart3, Bell, CreditCard, LayoutDashboardIcon, MessageSquare, UserRound, Users, PackageOpen, MessageCircle, FileText, Zap, Building2, Sparkles, UserCheck, GraduationCap, KeyRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart2, BarChart3, Bell, CreditCard, LayoutDashboardIcon, MessageSquare, UserRound, Users, PackageOpen, MessageCircle, FileText, Zap, Building2, Sparkles, UserCheck, GraduationCap, KeyRound, UsersRound } from "lucide-react";
 import { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -309,6 +309,31 @@ export default async function ManagerDashBoardLayout({
                             badge={admissionCount > 0 ? admissionCount : undefined}
                             locked={plan === "BASIC" || plan === "VERIFIED"}
                         />
+
+                        {/* BatchBuy™ Group Admissions Suite */}
+                        <div className="my-2 border-t border-stone-200/80"></div>
+                        <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-amber-900/60 mt-1 mb-1">
+                            BatchBuy™ Group Admissions
+                        </p>
+                        <ManagerSidebarLink
+                            href={`/manager/${instituteId}/batchbuy/slabs`}
+                            icon={<Zap />}
+                            label="Discount Slabs"
+                            locked={plan === "BASIC" || plan === "VERIFIED"}
+                        />
+                        <ManagerSidebarLink
+                            href={`/manager/${instituteId}/batchbuy/offers`}
+                            icon={<UsersRound />}
+                            label="Cohort Offers"
+                            locked={plan === "BASIC" || plan === "VERIFIED"}
+                        />
+                        <ManagerSidebarLink
+                            href={`/manager/${instituteId}/batchbuy/redemptions`}
+                            icon={<CreditCard />}
+                            label="Desk Redemptions"
+                            locked={plan === "BASIC" || plan === "VERIFIED"}
+                        />
+                        <div className="my-2 border-t border-stone-200/80"></div>
                         <ManagerSidebarLink
                             href={`/manager/${instituteId}/blogs`}
                             icon={<FileText />}

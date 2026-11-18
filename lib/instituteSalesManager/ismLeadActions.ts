@@ -6,6 +6,10 @@ import { getSession } from "@/lib/auth/getSession";
 import { notifyUser } from "@/lib/notifications/notify";
 
 import type { NotificationType } from "@/app/generated/prisma/client";
+import {
+  createAdmissionFromPipelineTx,
+  detectAndFlagPotentialBypassTx,
+} from "./admissionPipeline";
 
 async function verifyIsmAccess(enquiryId: string) {
   const session = await getSession();
@@ -263,9 +267,9 @@ export async function convertToAdmission(
   const existing = await prisma.admissionRecord.findUnique({ where: { enquiryId } });
   if (existing) return { success: false, error: "This lead has already been converted to admission." };
 
-  // 1. Create admission record
-  const admission = await prisma.admissionRecord.create({
-    data: {
+  const admission = await prisma.$transaction(async (tx) => {
+    const now = new Date();
+    const created = await createAdmissionFromPipelineTx(tx, {
       enquiryId,
       instituteId: enquiry.instituteId,
       ismId,
@@ -275,36 +279,32 @@ export async function convertToAdmission(
       paidAmount: 0,
       feeStatus: "PENDING",
       admissionNote: data.admissionNote || null,
-      installments: {
-        create: data.installments.map((inst: AdmissionInstallmentInput) => ({
-          amount: inst.amount,
-          dueDate: new Date(inst.dueDate),
-          status: "UPCOMING",
-          note: inst.note || null,
-        })),
-      },
-    },
-  });
+      actorRole: session.user.role || "INSTITUTE_SALES_MANAGER",
+      actorName: session.user.name || "ISM",
+      activityContent: `🎉 Lead converted to admission! Course: ${data.courseName || "N/A"}, Total Fee: ₹${data.totalFee.toLocaleString("en-IN")}`,
+      installments: data.installments.map((inst: AdmissionInstallmentInput) => ({
+        amount: inst.amount,
+        dueDate: new Date(inst.dueDate),
+        status: "UPCOMING" as const,
+        note: inst.note || null,
+      })),
+    });
 
-  // 2. Mark enquiry as converted
-  await prisma.instituteEnquiry.update({
-    where: { id: enquiryId },
-    data: {
-      convertedToAdmission: true,
-      status: "APPROVED",
-      lastUpdatedByRole: session.user.role,
-      lastUpdatedByName: session.user.name || "ISM",
-    },
-  });
-
-  // 3. Log activity
-  await prisma.ismLeadActivity.create({
-    data: {
+    // Non-blocking anti-bypass lookback: flags potential BatchBuy match for admin review
+    // without blocking admission or auto-charging commission on a phone match alone.
+    await detectAndFlagPotentialBypassTx(tx, {
+      admissionId: created.id,
       enquiryId,
-      ismId,
-      type: "CONVERTED",
-      content: `🎉 Lead converted to admission! Course: ${data.courseName || "N/A"}, Total Fee: ₹${data.totalFee.toLocaleString("en-IN")}`,
-    },
+      instituteId: enquiry.instituteId,
+      leadName: enquiry.name,
+      leadPhone: enquiry.phone,
+      leadEmail: enquiry.email,
+      actorUserId: session.user.id,
+      actorRole: session.user.role || "INSTITUTE_SALES_MANAGER",
+      now,
+    });
+
+    return created;
   });
 
   // 4. Notify Institute Managers

@@ -13,6 +13,7 @@ import {
   GraduationCap,
   MessageCircle,
   Building2,
+  Ticket,
 } from "lucide-react";
 
 import { IsmInstituteSwitcher } from "@/components/instituteSalesManager/IsmInstituteSwitcher";
@@ -118,6 +119,7 @@ export default async function InstituteSalesLayout({
             <SidebarLink href={`/institute_sales/${instituteId}/${userId}/leads`} icon={<Users />} label="My Leads" />
             <SidebarLink href={`/institute_sales/${instituteId}/${userId}/followups`} icon={<CalendarClock />} label="Follow-ups" />
             <SidebarLink href={`/institute_sales/${instituteId}/${userId}/admissions`} icon={<GraduationCap />} label="Admissions" />
+            <SidebarLink href={`/institute_sales/${instituteId}/${userId}/batchbuy/redemptions`} icon={<Ticket />} label="BatchBuy Redeem" />
             <SidebarLink href="/chat" icon={<MessageCircle />} label="Chat & Messages" />
           </nav>
         </ManagerSidebarWrapper>

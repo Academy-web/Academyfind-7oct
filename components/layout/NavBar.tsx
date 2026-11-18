@@ -15,6 +15,7 @@ import {
   MessageCircle,
   Users,
   Sparkles,
+  UsersRound,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -88,19 +89,19 @@ export default function Navbar({ session: initialSession }: { session?: any }) {
         </div>
 
         {/* Center Area: Main Navigation Links (Clean, Uncluttered) */}
-        <nav className="hidden lg:flex items-center gap-5 xl:gap-7">
+        <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
           {[
             { label: "Search", href: "/" },
+            { label: "BatchBuy", href: "/batchbuy" },
             { label: "Community", href: "/community" },
             { label: "Articles", href: "/blog" },
-            { label: "About", href: "/about", className: "hidden xl:inline-block" },
           ].map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={`relative py-1 text-sm font-semibold transition-colors duration-300 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:scale-x-0 after:bg-amber-500 after:transition-transform after:duration-300 hover:text-amber-500 hover:after:scale-x-100 ${
                 isActive(link.href) ? "text-amber-500 after:scale-x-100" : "text-slate-600"
-              } ${link.className || ""}`}
+              }`}
             >
               {link.label}
             </Link>
@@ -108,10 +109,10 @@ export default function Navbar({ session: initialSession }: { session?: any }) {
         </nav>
 
         {/* Right Area: Action Buttons & Auth Dropdown */}
-        <div className="hidden lg:flex items-center gap-2 xl:gap-2.5 shrink-0">
+        <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0">
           <Link
             href="/find-my-academy"
-            className={`group flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-300 whitespace-nowrap shadow-xs hover:-translate-y-0.5 ${
+            className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 whitespace-nowrap shadow-xs hover:-translate-y-0.5 ${
               isActive("/find-my-academy")
                 ? "bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/25"
                 : "bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 text-amber-900 border border-amber-300/80 hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white hover:shadow-md hover:shadow-amber-500/25"
@@ -123,7 +124,7 @@ export default function Navbar({ session: initialSession }: { session?: any }) {
 
           <Link
             href="/compare"
-            className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 whitespace-nowrap ${
+            className={`group hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 whitespace-nowrap ${
               isActive("/compare")
                 ? "bg-amber-500 text-white shadow-sm shadow-amber-500/20 font-bold"
                 : "bg-amber-50/80 text-amber-800 border border-amber-100 hover:bg-amber-100 hover:text-amber-900"
@@ -136,7 +137,7 @@ export default function Navbar({ session: initialSession }: { session?: any }) {
           <div className="relative group/add-inst">
             <Link
               href="/user/create-institute"
-              className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 whitespace-nowrap ${
+              className={`group flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 whitespace-nowrap ${
                 isActive("/user/create-institute") || isActive("/?claim=true")
                   ? "bg-amber-500 text-white shadow-sm shadow-amber-500/20 font-bold"
                   : "bg-amber-50/80 text-amber-800 border border-amber-100 hover:bg-amber-100 hover:text-amber-900"
@@ -224,6 +225,7 @@ export default function Navbar({ session: initialSession }: { session?: any }) {
               <div className="flex flex-col gap-1.5">
                 {[
                   { label: "AI Counselor", href: "/find-my-academy", icon: Sparkles, highlight: true },
+                  { label: "BatchBuy™ Group Offers", href: "/batchbuy", icon: UsersRound, highlight: true },
                   { label: "Search", href: "/", icon: Search },
                   { label: "Community", href: "/community", icon: Users },
                   { label: "Articles", href: "/blog", icon: FileText },

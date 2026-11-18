@@ -17,13 +17,16 @@ export async function GET(_req: Request, { params }: Params) {
 
   const conversation = await prisma.conversation.findUnique({
     where: { id },
-    select: { instituteId: true },
+    select: { instituteId: true, type: true, admissionCohort: { select: { id: true } } },
   });
 
   if (!conversation) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  const isBatchBuyCohortChat =
+    Boolean(conversation.admissionCohort) || conversation.type === "GROUP";
+
   let isManager = false;
-  if (conversation.instituteId) {
+  if (!isBatchBuyCohortChat && conversation.instituteId) {
     const manager = await prisma.instituteManager.findFirst({
       where: { instituteId: conversation.instituteId, userId: session.user.id },
     });

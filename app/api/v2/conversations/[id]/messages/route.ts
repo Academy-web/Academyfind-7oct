@@ -14,12 +14,19 @@ async function ensureAccess(conversationId: string, userId: string, userRole?: s
 
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
-    select: { id: true, instituteId: true, type: true },
+    select: { id: true, instituteId: true, type: true, admissionCohort: { select: { id: true } } },
   });
 
   if (!conversation) return false;
 
   const isAdmin = userRole === "ADMIN";
+  const isBatchBuyCohortChat =
+    Boolean(conversation.admissionCohort) || conversation.type === "GROUP";
+
+  if (isBatchBuyCohortChat) {
+    return isAdmin;
+  }
+
   let isManager = false;
 
   if (conversation.instituteId) {

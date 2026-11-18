@@ -26,7 +26,8 @@ import {
     Activity,
     Megaphone,
     Share2,
-    KeyRound
+    KeyRound,
+    Percent,
 } from "lucide-react";
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
@@ -187,6 +188,7 @@ export default async function AdminLayout({
 
                         <div className="my-2 border-t border-stone-100/50"></div>
                         <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-stone-900/40 mt-2 mb-1">Platform Tools</p>
+                        <SidebarLink href="/af-ass-manage/batchbuy" icon={<Percent />} label="BatchBuy™ Control" />
                         <SidebarLink href="/af-ass-manage/memberships" icon={<UserCheck />} label="Memberships" count={pendingMemberships} />
                         <SidebarLink href="/af-ass-manage/chat" icon={<MessageCircle />} label="Chat Reports" count={pendingChatReports} />
                         <SidebarLink href="/af-ass-manage/wallets" icon={<Wallet />} label="Wallets" />

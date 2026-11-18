@@ -27,6 +27,7 @@ export async function GET(_req: Request, { params }: Params) {
       },
       instituteId: true,
       batchId: true,
+      admissionCohort: { select: { id: true } },
       institute: { select: { id: true, name: true, logo: true, slug: true, phone: true } },
       participants: {
         where: { status: "ACTIVE" },
@@ -39,7 +40,6 @@ export async function GET(_req: Request, { params }: Params) {
               name: true,
               username: true,
               image: true,
-              phone: true,
             },
           },
         },
@@ -61,9 +61,17 @@ export async function GET(_req: Request, { params }: Params) {
     if (manager) isManager = true;
   }
 
-  // If user has access (is manager/admin or institute member) but not in participant table, auto-add
+  const isBatchBuyCohortChat =
+    Boolean(conversation.admissionCohort) || conversation.type === "GROUP";
+
+  // Private BatchBuy cohort chats and DIRECT chats require explicit active membership
+  // (institute managers cannot snoop or auto-join student cohort discussions)
   if (!isParticipant) {
-    if (isAdmin || isManager || conversation.type === "INSTITUTE" || conversation.type === "BATCH") {
+    const canAutoJoin =
+      !isBatchBuyCohortChat &&
+      (isAdmin || isManager || conversation.type === "INSTITUTE" || conversation.type === "BATCH");
+
+    if (canAutoJoin) {
       try {
         await prisma.conversationParticipant.upsert({
           where: { conversationId_userId: { conversationId: id, userId } },
@@ -75,6 +83,10 @@ export async function GET(_req: Request, { params }: Params) {
         console.error("Auto participant add error:", e);
       }
     }
+  }
+
+  if (!isParticipant && !isAdmin) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   // Mark conversation as read for this participant
