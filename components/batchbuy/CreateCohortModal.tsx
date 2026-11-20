@@ -72,8 +72,9 @@ export function CreateCohortModal({
     presetInstitute?.id || ""
   );
   const [selectedBatchId, setSelectedBatchId] = useState(
-    initialBatchId || presetInstitute?.batches[0]?.id || ""
+    initialBatchId || presetInstitute?.batches[0]?.id || "__auto_comp__"
   );
+  const [customBatchName, setCustomBatchName] = useState("");
 
   const [slabResolution, setSlabResolution] = useState<SlabResolutionResult>({
     scope: "NONE",
@@ -117,9 +118,15 @@ export function CreateCohortModal({
       const res = await searchInstitutesAction(instituteSearch);
       if (active && res.success) {
         setInstituteOptions(res.institutes);
-        if (!selectedInstituteId && res.institutes.length > 0) {
-          setSelectedInstituteId(res.institutes[0].id);
-          setSelectedBatchId(res.institutes[0].batches[0]?.id || "");
+        if (res.institutes.length > 0) {
+          const isStillPresent = res.institutes.some(
+            (i) => i.id === selectedInstituteId
+          );
+          if (!selectedInstituteId || !isStillPresent) {
+            const first = res.institutes[0];
+            setSelectedInstituteId(first.id);
+            setSelectedBatchId(first.batches[0]?.id || "__auto_comp__");
+          }
         }
       }
       if (active) setLoadingInstitutes(false);
@@ -135,7 +142,7 @@ export function CreateCohortModal({
   useEffect(() => {
     if (presetInstitute) {
       setSelectedInstituteId(presetInstitute.id);
-      const nextBatchId = initialBatchId || presetInstitute.batches[0]?.id || "";
+      const nextBatchId = initialBatchId || presetInstitute.batches[0]?.id || "__auto_comp__";
       setSelectedBatchId(nextBatchId);
     }
   }, [presetInstitute, initialBatchId]);
@@ -168,17 +175,42 @@ export function CreateCohortModal({
 
   // Suggest smart default title when institute & batch are picked and user hasn't typed a custom one
   useEffect(() => {
-    if (!selectedInstitute || !selectedBatch) return;
-    if (!title.trim() || title.includes("BatchBuy") || title.includes("Cohort")) {
-      setTitle(`${selectedInstitute.name} — ${selectedBatch.name} (${targetAcademicYear})`);
+    if (!selectedInstitute) return;
+    if (!title.trim() || title.includes("BatchBuy") || title.includes("Cohort") || title.includes("—")) {
+      const bName =
+        selectedBatch?.name ||
+        (selectedBatchId === "__custom__" && customBatchName.trim()
+          ? customBatchName.trim()
+          : selectedBatchId === "__auto_dropper__"
+          ? `${examCategory} Droppers Batch`
+          : selectedBatchId === "__auto_foundation__"
+          ? `${examCategory} Foundation Batch`
+          : selectedBatchId === "__auto_crash__"
+          ? `${examCategory} Crash Course`
+          : `${examCategory} Classroom Program`);
+
+      setTitle(`${selectedInstitute.name} — ${bName} (${targetAcademicYear})`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedInstitute?.id, selectedBatch?.id, targetAcademicYear]);
+  }, [
+    selectedInstitute?.id,
+    selectedInstitute?.name,
+    selectedBatch?.id,
+    selectedBatch?.name,
+    selectedBatchId,
+    customBatchName,
+    examCategory,
+    targetAcademicYear,
+  ]);
 
   const handleSelectInstitute = (instId: string) => {
     setSelectedInstituteId(instId);
     const inst = instituteOptions.find((i) => i.id === instId);
-    setSelectedBatchId(inst?.batches[0]?.id || "");
+    if (inst && inst.batches.length > 0) {
+      setSelectedBatchId(inst.batches[0].id);
+    } else {
+      setSelectedBatchId("__auto_comp__");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -191,13 +223,18 @@ export function CreateCohortModal({
       toast.error("Please select an institute and batch first.");
       return;
     }
+    if (selectedBatchId === "__custom__" && !customBatchName.trim()) {
+      toast.error("Please enter a custom batch or course name.");
+      return;
+    }
 
     setSubmitting(true);
     try {
       const res = await createBatchBuyCohort({
         instituteId: selectedInstituteId,
         batchId: selectedBatchId,
-        title,
+        customBatchName: selectedBatchId === "__custom__" ? customBatchName.trim() : undefined,
+        title: title.trim(),
         examCategory,
         targetAcademicYear: Number(targetAcademicYear),
         minRequired: Number(minRequired),
@@ -320,14 +357,14 @@ export function CreateCohortModal({
                       {instituteOptions.length === 0 ? (
                         <option value="">
                           {loadingInstitutes
-                            ? "Loading institutes..."
-                            : "No institutes with active batches matched"}
+                            ? "Searching coaching institutes..."
+                            : "No coaching institutes matched. Try another keyword or city name."}
                         </option>
                       ) : (
                         instituteOptions.map((inst) => (
                           <option key={inst.id} value={inst.id}>
                             {inst.name} ({inst.cityName})
-                            {inst.hasSlabs ? " — BatchBuy Partner Slabs Live" : ""}
+                            {inst.hasSlabs ? " — Partner Slabs Live" : ""}
                           </option>
                         ))
                       )}
@@ -360,17 +397,57 @@ export function CreateCohortModal({
                   onChange={(e) => setSelectedBatchId(e.target.value)}
                   className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
                 >
-                  {!selectedInstitute || selectedInstitute.batches.length === 0 ? (
-                    <option value="">No active batches available</option>
+                  {selectedInstitute && selectedInstitute.batches.length > 0 ? (
+                    <>
+                      <optgroup label="Official Pre-Configured Batches">
+                        {selectedInstitute.batches.map((batch) => (
+                          <option key={batch.id} value={batch.id}>
+                            {batch.name}
+                            {batch.fee ? ` — ${formatINR(batch.fee)}` : ""} ({batch.mode})
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Standard Programs">
+                        <option value="__auto_comp__">
+                          {examCategory} Comprehensive Classroom Program ({targetAcademicYear})
+                        </option>
+                        <option value="__custom__">+ Enter Custom Batch or Course Name</option>
+                      </optgroup>
+                    </>
                   ) : (
-                    selectedInstitute.batches.map((batch) => (
-                      <option key={batch.id} value={batch.id}>
-                        {batch.name}
-                        {batch.fee ? ` — ${formatINR(batch.fee)}` : ""} ({batch.mode})
+                    <>
+                      <option value="__auto_comp__">
+                        {examCategory} Comprehensive Classroom Program ({targetAcademicYear})
                       </option>
-                    ))
+                      <option value="__auto_dropper__">
+                        {examCategory} Droppers / Target Repeaters Batch ({targetAcademicYear})
+                      </option>
+                      <option value="__auto_foundation__">
+                        {examCategory} Foundation Program (Class 11 &amp; 12)
+                      </option>
+                      <option value="__auto_crash__">
+                        {examCategory} Fast-Track / Crash Course ({targetAcademicYear})
+                      </option>
+                      <option value="__custom__">+ Enter Custom Batch or Course Name</option>
+                    </>
                   )}
                 </select>
+
+                {selectedBatchId === "__custom__" && (
+                  <div className="space-y-1 pt-2">
+                    <Label htmlFor="create-cohort-custom-batch" className="text-xs font-semibold text-slate-700">
+                      Specify Custom Program / Course Name
+                    </Label>
+                    <Input
+                      id="create-cohort-custom-batch"
+                      value={customBatchName}
+                      onChange={(e) => setCustomBatchName(e.target.value)}
+                      placeholder={`e.g. ${examCategory} Intensive 2-Year Program / Dropper Batch`}
+                      className="h-10 rounded-xl bg-white"
+                      autoFocus
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Live Slab Resolution Preview */}
