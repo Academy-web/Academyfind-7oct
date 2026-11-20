@@ -12,9 +12,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Google Client ID not configured" }, { status: 500 });
     }
 
-    // Derive base URL from the current request (works in both local and production)
-    const requestUrl = new URL(request.url);
-    const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`;
+    // Derive base URL (handles reverse proxy, custom headers, or defaults to canonical production URL)
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+    const host = forwardedHost || request.headers.get("host") || "";
+
+    let baseUrl = "https://academyfind.com";
+    if (process.env.NODE_ENV === "development" && host.includes("localhost")) {
+      baseUrl = "http://localhost:3000";
+    } else if (forwardedHost && !forwardedHost.includes("localhost")) {
+      baseUrl = `${forwardedProto}://${forwardedHost}`;
+    } else if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes("localhost")) {
+      baseUrl = process.env.NEXTAUTH_URL;
+    }
     const redirectUri = `${baseUrl}/api/mobile/auth/google-callback`;
 
     // Generate a state token for CSRF protection

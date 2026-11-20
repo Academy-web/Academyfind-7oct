@@ -33,7 +33,7 @@ export async function resolveEffectiveDiscountSlabs(
   instituteId: string,
   batchId?: string | null
 ): Promise<SlabResolutionResult> {
-  if (batchId) {
+  if (batchId && !batchId.startsWith("__")) {
     const batchSlabs = await prisma.groupDiscountSlab.findMany({
       where: {
         instituteId,

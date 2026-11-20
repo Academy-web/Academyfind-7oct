@@ -92,6 +92,7 @@ export async function createBatchBuyCohort(rawInput: CreateCohortInput) {
   const {
     instituteId,
     batchId,
+    customBatchName,
     title,
     examCategory,
     targetAcademicYear,
@@ -134,17 +135,51 @@ export async function createBatchBuyCohort(rawInput: CreateCohortInput) {
     return { success: false, error: "Selected institute was not found." };
   }
 
-  const batch = await prisma.instituteBatch.findFirst({
-    where: { id: batchId, instituteId, isActive: true },
-    select: { id: true, name: true },
-  });
+  let batch = null;
+  if (batchId && !batchId.startsWith("__")) {
+    batch = await prisma.instituteBatch.findFirst({
+      where: { id: batchId, instituteId, isActive: true },
+      select: { id: true, name: true },
+    });
+  }
 
   if (!batch) {
-    return {
-      success: false,
-      error: "The selected batch is inactive or does not belong to this institute.",
-    };
+    // Generate appropriate batch name for auto or demand cohorts
+    let batchName = customBatchName?.trim();
+    if (!batchName) {
+      if (batchId === "__auto_dropper__") {
+        batchName = `${examCategory} Droppers Batch (${targetAcademicYear})`;
+      } else if (batchId === "__auto_foundation__") {
+        batchName = `${examCategory} Foundation Batch (${targetAcademicYear})`;
+      } else if (batchId === "__auto_crash__") {
+        batchName = `${examCategory} Crash Course (${targetAcademicYear})`;
+      } else {
+        batchName = `${examCategory} Classroom Program (${targetAcademicYear})`;
+      }
+    }
+
+    batch = await prisma.instituteBatch.findFirst({
+      where: { instituteId, name: batchName, isActive: true },
+      select: { id: true, name: true },
+    });
+
+    if (!batch) {
+      batch = await prisma.instituteBatch.create({
+        data: {
+          instituteId,
+          name: batchName,
+          courseName: examCategory,
+          academicYear: String(targetAcademicYear),
+          isActive: true,
+          mode: "OFFLINE",
+        },
+        select: { id: true, name: true },
+      });
+    }
   }
+
+  const resolvedBatchId = batch.id;
+  const resolvedBatchName = batch.name;
 
   const normalizedParentPhone = intent.isMinor
     ? normalizeIndianPhone(intent.parentPhone)
@@ -174,7 +209,7 @@ export async function createBatchBuyCohort(rawInput: CreateCohortInput) {
             stage: { in: ACTIVE_MEMBER_STAGES },
             cohort: {
               instituteId,
-              batchId,
+              batchId: resolvedBatchId,
               status: { in: ["FORMING", "OFFER_PENDING", "OFFER_ACTIVE", "ADMISSION_OPEN"] },
             },
           },
@@ -192,7 +227,7 @@ export async function createBatchBuyCohort(rawInput: CreateCohortInput) {
         // Generate collision-free cohortCode
         let cohortCode = "";
         for (let attempt = 0; attempt < 6; attempt++) {
-          const candidate = generateCohortCodeCandidate(institute.name, institute.city.name);
+          const candidate = generateCohortCodeCandidate(institute.name, institute.city?.name || "All India");
           const taken = await tx.groupAdmissionCohort.findUnique({
             where: { cohortCode: candidate },
             select: { id: true },
@@ -230,11 +265,11 @@ export async function createBatchBuyCohort(rawInput: CreateCohortInput) {
             type: "GROUP",
             isStudyGroup: false,
             instituteId,
-            batchId,
+            batchId: resolvedBatchId,
             title,
             examCategory,
-            city: institute.city.name,
-            description: `BatchBuy Cohort ${cohortCode} for ${institute.name} (${batch.name})`,
+            city: institute.city?.name || "All India",
+            description: `BatchBuy Cohort ${cohortCode} for ${institute.name} (${resolvedBatchName})`,
             createdById: userId,
             visibility: "PRIVATE",
             memberCount: 1,
@@ -250,7 +285,7 @@ export async function createBatchBuyCohort(rawInput: CreateCohortInput) {
             cohortCode,
             title,
             instituteId,
-            batchId,
+            batchId: resolvedBatchId,
             examCategory,
             targetAcademicYear,
             minRequired,

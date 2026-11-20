@@ -251,8 +251,8 @@ export async function getPublicCohorts(
         slug: cohort.institute.slug,
         name: cohort.institute.name,
         logo: cohort.institute.logo,
-        cityName: cohort.institute.city.name,
-        citySlug: cohort.institute.city.slug,
+        cityName: cohort.institute.city?.name || "All India",
+        citySlug: cohort.institute.city?.slug || "all-india",
         verified: cohort.institute.isVerified,
       },
       batch: {
@@ -418,8 +418,8 @@ export async function getCohortDetailsByCode(
       slug: cohort.institute.slug,
       name: cohort.institute.name,
       logo: cohort.institute.logo,
-      cityName: cohort.institute.city.name,
-      citySlug: cohort.institute.city.slug,
+      cityName: cohort.institute.city?.name || "All India",
+      citySlug: cohort.institute.city?.slug || "all-india",
       verified: cohort.institute.isVerified,
     },
     batch: {
@@ -495,7 +495,7 @@ export async function searchInstitutesForCohortCreation(
 
   const institutes = await prisma.institute.findMany({
     where: {
-      batches: { some: { isActive: true } },
+      isActive: true,
       ...(q
         ? {
             OR: [
@@ -505,7 +505,7 @@ export async function searchInstitutesForCohortCreation(
           }
         : {}),
     },
-    take: 12,
+    take: 25,
     orderBy: [{ discountSlabs: { _count: "desc" } }, { isVerified: "desc" }, { name: "asc" }],
     select: {
       id: true,
@@ -540,7 +540,7 @@ export async function searchInstitutesForCohortCreation(
     id: inst.id,
     name: inst.name,
     slug: inst.slug,
-    cityName: inst.city.name,
+    cityName: inst.city?.name || "All India",
     logo: inst.logo,
     verified: inst.isVerified,
     batches: inst.batches,

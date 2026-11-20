@@ -126,6 +126,7 @@ export const CreateCohortInputSchema = z
   .object({
     instituteId: z.string().min(1, "Institute is required."),
     batchId: z.string().min(1, "Please select a batch for this cohort."),
+    customBatchName: z.string().trim().max(120).optional(),
     title: z
       .string()
       .trim()
