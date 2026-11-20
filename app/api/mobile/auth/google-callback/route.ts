@@ -30,19 +30,11 @@ export async function GET(request: NextRequest) {
     // Exchange auth code for tokens
     const clientId = process.env.GOOGLE_CLIENT_ID!;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
-    const forwardedHost = request.headers.get("x-forwarded-host");
-    const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
-    const host = forwardedHost || request.headers.get("host") || "";
-
-    let baseUrl = "https://academyfind.com";
-    if (process.env.NODE_ENV === "development" && host.includes("localhost")) {
-      baseUrl = "http://localhost:3000";
-    } else if (forwardedHost && !forwardedHost.includes("localhost")) {
-      baseUrl = `${forwardedProto}://${forwardedHost}`;
-    } else if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes("localhost")) {
-      baseUrl = process.env.NEXTAUTH_URL;
-    }
-    const redirectUri = `${baseUrl}/api/mobile/auth/google-callback`;
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+    const isLocal = process.env.NODE_ENV === "development" && host.includes("localhost");
+    const redirectUri = isLocal
+      ? "http://localhost:3000/api/mobile/auth/google-callback"
+      : "https://academyfind.com/api/mobile/auth/google-callback";
 
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
