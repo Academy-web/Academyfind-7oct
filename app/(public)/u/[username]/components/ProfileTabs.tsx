@@ -15,7 +15,8 @@ import {
   MapPin,
   PlusCircle,
   PenTool,
-  FileText
+  FileText,
+  Tag,
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatIST } from "@/lib/utils";
@@ -180,6 +181,39 @@ function StudentTab({
             <Pill label={`📚 ${sp.currentClass}`} />
           )}
         </div>
+
+        {sp.tags && sp.tags.length > 0 && (
+          <div className="mt-5 pt-4 border-t border-slate-100">
+            <p className="mb-2.5 text-xs font-bold uppercase tracking-wider text-amber-700/80 flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-amber-500" />
+              Learning Interests & Targeted Coaching Tags
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {sp.tags.map((t: string) => (
+                <span
+                  key={t}
+                  className="inline-flex items-center gap-1.5 bg-amber-50/80 border border-amber-200/90 text-amber-900 text-xs font-semibold px-3 py-1 rounded-full shadow-2xs hover:bg-amber-100/80 transition-colors"
+                >
+                  <Tag className="w-3 h-3 text-amber-600" />
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {sp.subjects && sp.subjects.length > 0 && (
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Focus Subjects
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {sp.subjects.map((s: string) => (
+                <Pill key={s} label={s} color="amber" />
+              ))}
+            </div>
+          </div>
+        )}
       </article>
 
       {/* Per-institute records */}

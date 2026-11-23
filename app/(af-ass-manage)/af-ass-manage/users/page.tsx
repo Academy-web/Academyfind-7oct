@@ -22,6 +22,7 @@ export default async function AdminUsersPage({
     const limit = 50; 
     const search = typeof params.search === 'string' ? params.search : '';
     const role = typeof params.role === 'string' ? params.role : '';
+    const tag = typeof params.tag === 'string' ? params.tag.trim() : '';
 
     // 2. Build Prisma Where Condition dynamically
     const whereCondition: any = {};
@@ -37,6 +38,12 @@ export default async function AdminUsersPage({
         whereCondition.role = role as any; 
     }
 
+    if (tag) {
+        whereCondition.studentProfile = {
+            tags: { has: tag }
+        };
+    }
+
     // 3. Execute Parallel Queries
     const [totalUsers, users] = await Promise.all([
         prisma.user.count({ where: whereCondition }),
@@ -44,7 +51,12 @@ export default async function AdminUsersPage({
             where: whereCondition,
             take: limit,
             skip: (page - 1) * limit,
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            include: {
+                studentProfile: {
+                    select: { tags: true }
+                }
+            }
         })
     ]);
 
@@ -102,6 +114,18 @@ export default async function AdminUsersPage({
                                                         {user.name || "Unknown User"}
                                                     </div>
                                                     {!user.isActive && <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider">Blocked</span>}
+                                                    {user.studentProfile?.tags && user.studentProfile.tags.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {user.studentProfile.tags.slice(0, 3).map((t) => (
+                                                                <span key={t} className="inline-block px-1.5 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-900 border border-amber-200/70 rounded-md">
+                                                                    #{t}
+                                                                </span>
+                                                            ))}
+                                                            {user.studentProfile.tags.length > 3 && (
+                                                                <span className="text-[10px] text-slate-400 font-medium">+{user.studentProfile.tags.length - 3}</span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </Link>
                                         </td>

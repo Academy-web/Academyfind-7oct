@@ -1,7 +1,7 @@
 import { ManagerSidebarWrapper } from "@/components/manager/ManagerSidebarWrapper";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
-import { ArrowLeft, ArrowRight, BarChart2, BarChart3, Bell, CreditCard, LayoutDashboardIcon, MessageSquare, UserRound, Users, PackageOpen, MessageCircle, FileText, Zap, Building2, Sparkles, UserCheck, GraduationCap, KeyRound, UsersRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart2, BarChart3, Bell, CreditCard, LayoutDashboardIcon, MessageSquare, UserRound, Users, PackageOpen, MessageCircle, FileText, Zap, Building2, Sparkles, UserCheck, GraduationCap, KeyRound, UsersRound, Radio } from "lucide-react";
 import { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -287,6 +287,13 @@ export default async function ManagerDashBoardLayout({
                             locked={plan == "BASIC" || plan == "VERIFIED"}
                         />
                         <ManagerSidebarLink href={`/manager/${instituteId}/leads`} icon={<MessageSquare />} label="Student Leads" locked={plan === "BASIC" || plan == "VERIFIED"} />
+                        <ManagerSidebarLink
+                            href={`/manager/${instituteId}/students`}
+                            icon={<Radio />}
+                            label="Targeted Outreach"
+                            badge="Tags"
+                            className="bg-amber-500/10 text-amber-900 font-bold border border-amber-500/30 hover:bg-amber-500/20"
+                        />
                         {isVerifiedType && (
                             <ManagerSidebarLink
                                 href={`/manager/${instituteId}/unlocks`}

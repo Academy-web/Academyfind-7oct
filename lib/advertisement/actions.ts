@@ -43,6 +43,10 @@ export async function submitAdvertisement(formData: FormData) {
         const linkUrl = formData.get("linkUrl") as string | null;
         const utrNumber = formData.get("utrNumber") as string;
         const paymentScreenshotFile = formData.get("paymentScreenshot") as File;
+        const targetTagsRaw = formData.get("targetTags") as string | null;
+        const targetTags = targetTagsRaw
+            ? targetTagsRaw.split(",").map((t) => t.trim()).filter(Boolean)
+            : [];
 
         if (!title || !utrNumber || !paymentScreenshotFile) {
             return { success: false, error: "Missing required fields." };
@@ -90,6 +94,7 @@ export async function submitAdvertisement(formData: FormData) {
                 status: "PENDING",
                 visibility: "VISIBLE",
                 pricePaid: settings.rate,
+                targetTags,
             }
         });
 

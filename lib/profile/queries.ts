@@ -28,6 +28,8 @@ export const getPublicProfile = cache(async (username: string) =>
           bio: true,
           targetExam: true,
           currentClass: true,
+          tags: true,
+          subjects: true,
           isVisible: true,
         },
       },

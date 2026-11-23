@@ -236,18 +236,28 @@ export default async function Home() {
 
   let preferredCityIds: string[] = [];
   let preferredCategoryIds: string[] = [];
+  let studentTags: string[] = [];
 
   if (userId) {
-    const prefs = await prisma.userPreference.findUnique({
-      where: { userId },
-      include: {
-        preferredCities: true,
-        preferredCategories: true,
-      }
-    });
+    const [prefs, student] = await Promise.all([
+      prisma.userPreference.findUnique({
+        where: { userId },
+        include: {
+          preferredCities: true,
+          preferredCategories: true,
+        },
+      }),
+      prisma.studentProfile.findUnique({
+        where: { userId },
+        select: { tags: true },
+      }),
+    ]);
     if (prefs) {
       preferredCityIds = prefs.preferredCities.map((c: { cityId: string }) => c.cityId);
       preferredCategoryIds = prefs.preferredCategories.map((c: { categoryId: string }) => c.categoryId);
+    }
+    if (student?.tags) {
+      studentTags = student.tags;
     }
   }
 
@@ -263,6 +273,16 @@ export default async function Home() {
     },
     orderBy: { createdAt: "desc" }
   });
+
+  // Prioritize targeted ads matching student's interest tags
+  if (studentTags.length > 0 && activeAds.length > 1) {
+    const lowerTags = studentTags.map((t) => t.toLowerCase());
+    activeAds.sort((a, b) => {
+      const aMatches = a.targetTags?.some((t) => lowerTags.includes(t.toLowerCase())) ? 1 : 0;
+      const bMatches = b.targetTags?.some((t) => lowerTags.includes(t.toLowerCase())) ? 1 : 0;
+      return bMatches - aMatches;
+    });
+  }
 
   return (
     <>

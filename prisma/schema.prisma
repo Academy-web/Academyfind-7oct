@@ -762,6 +762,7 @@ model StudentProfile {
   lookingForBuddy  Boolean                  @default(true)
   preferredMedium  String?                  @default("English")
   subjects         String[]                 @default([])
+  tags             String[]                 @default([])
   isVisible        Boolean                  @default(true)
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt
@@ -2804,6 +2805,7 @@ model Advertisement {
   pricePaid         Int                     @default(199)
   paymentScreenshot String?
   utrNumber         String?
+  targetTags        String[]                @default([])
 
   isRenewalRequest Boolean @default(false)
   editRequestData  Json?

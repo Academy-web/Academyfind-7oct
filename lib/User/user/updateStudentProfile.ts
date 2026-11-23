@@ -13,6 +13,8 @@ const updateStudentProfileSchema = z.object({
   currentClass: z.string().trim().max(50).nullable(),
 
   targetExam: z.string().trim().max(100).nullable(),
+
+  tags: z.array(z.string().trim().min(1).max(40)).optional().default([]),
 });
 
 export async function updateStudentProfile(

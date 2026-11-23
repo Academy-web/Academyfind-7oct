@@ -13,6 +13,7 @@ import {
   Loader2,
   GraduationCap,
   Languages,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { sendBuddyRequest, respondBuddyRequest } from "@/lib/community/buddies";
@@ -31,6 +32,7 @@ interface BuddyCardProps {
     locality?: string | null;
     preferredMedium?: string | null;
     subjects?: string[];
+    tags?: string[];
     distanceKm?: number | null;
     relationship?: {
       requestId: string;
@@ -198,6 +200,26 @@ export function BuddyCard({ buddy }: BuddyCardProps) {
         <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-3">
           {buddy.headline || buddy.bio || "Preparing seriously for upcoming entrance examinations. Looking for accountable study buddies."}
         </p>
+
+        {/* Interest Tags */}
+        {buddy.tags && buddy.tags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 mb-3">
+            {buddy.tags.slice(0, 3).map((tag: string) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-900 bg-amber-50/90 border border-amber-200/80 px-2 py-0.5 rounded-full"
+              >
+                <Tag className="w-2.5 h-2.5 text-amber-600" />
+                {tag}
+              </span>
+            ))}
+            {buddy.tags.length > 3 && (
+              <span className="text-[10px] text-slate-400 font-semibold">
+                +{buddy.tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Focus Subjects */}
         {buddy.subjects && buddy.subjects.length > 0 && (

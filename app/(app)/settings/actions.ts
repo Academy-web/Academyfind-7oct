@@ -95,6 +95,7 @@ const studentSchema = z.object({
   bio: z.string().trim().max(1000).nullable(),
   targetExam: z.string().trim().max(100).nullable(),
   currentClass: z.string().trim().max(50).nullable(),
+  tags: z.array(z.string().trim().min(1).max(40)).default([]),
 });
 
 const teacherSchema = z.object({
@@ -253,6 +254,7 @@ export async function updateStudentProfile(
     bio: nullableText(formData, "bio"),
     targetExam: nullableText(formData, "targetExam"),
     currentClass: nullableText(formData, "currentClass"),
+    tags: list(formData, "tags"),
   });
   if (!parsed.success) {
     return { success: false, message: "Please check the student fields." };

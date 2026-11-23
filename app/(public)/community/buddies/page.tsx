@@ -31,6 +31,7 @@ interface BuddiesPageProps {
   searchParams: Promise<{
     exam?: string;
     city?: string;
+    tag?: string;
     q?: string;
     page?: string;
   }>;
@@ -40,6 +41,7 @@ export default async function NearbyBuddiesPage({ searchParams }: BuddiesPagePro
   const params = await searchParams;
   const examCategory = params.exam || "ALL";
   const city = params.city || "ALL";
+  const tag = params.tag || "ALL";
   const search = params.q || "";
   const page = params.page ? parseInt(params.page, 10) : 1;
 
@@ -50,6 +52,7 @@ export default async function NearbyBuddiesPage({ searchParams }: BuddiesPagePro
     getNearbyBuddies({
       examCategory,
       city,
+      tag,
       search,
       page,
       limit: 18,

@@ -25,6 +25,7 @@ import {
   SubmitButton,
 } from "@/app/(app)/settings/components/FormStatus";
 import PhoneOtpModal from "@/components/auth/PhoneOtpModal";
+import { StudentTagInput } from "@/components/student/StudentTagInput";
 
 const initial = { success: false, message: "" };
 const inputClass =
@@ -44,6 +45,7 @@ type Props = {
     bio: string | null;
     targetExam: string | null;
     currentClass: string | null;
+    tags?: string[];
     isVisible: boolean;
   } | null;
   teacher: {
@@ -554,6 +556,7 @@ export function ProfileForms({ user, student, teacher }: Props) {
               defaultValue={student?.currentClass}
             />
           </div>
+          <StudentTagInput initialTags={student?.tags ?? []} />
           <p className="text-sm text-slate-500">
             Institute-specific courses and batches are read-only here. Manage them
             at the institute.

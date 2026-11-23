@@ -19,6 +19,7 @@ export default async function ProfileSettingsPage() {
           bio: true,
           targetExam: true,
           currentClass: true,
+          tags: true,
           isVisible: true,
         },
       },

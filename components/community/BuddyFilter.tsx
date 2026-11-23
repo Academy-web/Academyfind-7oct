@@ -2,8 +2,22 @@
 
 import React from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Search, MapPin, X, Compass } from "lucide-react";
+import { Search, MapPin, X, Tag } from "lucide-react";
 import { Input } from "@/components/ui/input";
+
+const POPULAR_TAG_FILTERS = [
+  "ALL",
+  "Guitar Lessons",
+  "UPSC CSE",
+  "IIT JEE",
+  "NEET UG",
+  "Coding / Python",
+  "Spoken English",
+  "Classical Dance",
+  "Music & Vocals",
+  "Robotics & AI",
+  "Web Development",
+];
 
 const EXAMS = [
   { id: "ALL", label: "All Exams" },
@@ -37,6 +51,7 @@ export function BuddyFilter() {
 
   const currentExam = searchParams.get("exam") || "ALL";
   const currentCity = searchParams.get("city") || "ALL";
+  const currentTag = searchParams.get("tag") || "ALL";
   const currentSearch = searchParams.get("q") || "";
 
   const updateParam = (key: string, value: string) => {
@@ -115,6 +130,31 @@ export function BuddyFilter() {
               }`}
             >
               {exam.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Interest & Coaching Tag Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1">
+          <Tag className="w-3 h-3 text-amber-500" />
+          Tags:
+        </span>
+        {POPULAR_TAG_FILTERS.map((tag) => {
+          const active = currentTag === tag;
+          return (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => updateParam("tag", tag)}
+              className={`whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
+                active
+                  ? "bg-amber-600 text-white shadow-xs font-bold ring-1 ring-amber-600"
+                  : "bg-amber-50/60 text-amber-900 border border-amber-200/70 hover:bg-amber-100 hover:border-amber-300"
+              }`}
+            >
+              {tag === "ALL" ? "All Tags" : `#${tag}`}
             </button>
           );
         })}

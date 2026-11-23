@@ -174,6 +174,26 @@ export function ProfileHeader({
               ) : null}
             </div>
 
+            {/* Student Interest Tags Preview */}
+            {profile.studentProfile?.tags && profile.studentProfile.tags.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Interests:</span>
+                {profile.studentProfile.tags.slice(0, 4).map((t: string) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-1 rounded-full bg-amber-50/80 px-2.5 py-0.5 text-[11px] font-semibold text-amber-900 border border-amber-200/70"
+                  >
+                    #{t}
+                  </span>
+                ))}
+                {profile.studentProfile.tags.length > 4 && (
+                  <span className="text-[11px] font-semibold text-slate-400">
+                    +{profile.studentProfile.tags.length - 4} more
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Stats bar */}
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-500">
               <span>

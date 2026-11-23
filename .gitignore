@@ -42,7 +42,7 @@ next-env.d.ts
 
 /app/generated/prisma
 
-/import_progress.json
+/import_progress*.json
 
 /app/api/chat
 /app/ai-search

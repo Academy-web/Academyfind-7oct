@@ -27,6 +27,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 export interface GetNearbyBuddiesParams {
   examCategory?: string;
   city?: string;
+  tag?: string;
   search?: string;
   radiusKm?: number;
   userLat?: number;
@@ -42,6 +43,7 @@ export async function getNearbyBuddies(params: GetNearbyBuddiesParams = {}) {
   const {
     examCategory,
     city,
+    tag,
     search,
     radiusKm,
     userLat,
@@ -69,6 +71,10 @@ export async function getNearbyBuddies(params: GetNearbyBuddiesParams = {}) {
     where.city = { contains: city, mode: "insensitive" };
   }
 
+  if (tag && tag !== "ALL") {
+    where.tags = { has: tag };
+  }
+
   if (search && search.trim()) {
     const q = search.trim();
     where.OR = [
@@ -78,6 +84,7 @@ export async function getNearbyBuddies(params: GetNearbyBuddiesParams = {}) {
       { city: { contains: q, mode: "insensitive" } },
       { locality: { contains: q, mode: "insensitive" } },
       { user: { name: { contains: q, mode: "insensitive" } } },
+      { tags: { has: q } },
     ];
   }
 
@@ -102,6 +109,7 @@ export async function getNearbyBuddies(params: GetNearbyBuddiesParams = {}) {
           longitude: true,
           preferredMedium: true,
           subjects: true,
+          tags: true,
           user: {
             select: {
               id: true,
@@ -344,6 +352,7 @@ const updatePreferencesSchema = z.object({
   lookingForBuddy: z.boolean().default(true),
   preferredMedium: z.string().trim().max(30).optional(),
   subjects: z.array(z.string().trim()).max(6).optional(),
+  tags: z.array(z.string().trim()).max(15).optional(),
 });
 
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
@@ -367,6 +376,7 @@ export async function updateMyBuddyPreferences(data: UpdatePreferencesInput) {
     lookingForBuddy,
     preferredMedium,
     subjects,
+    tags,
   } = parsed.data;
 
   try {
@@ -383,6 +393,7 @@ export async function updateMyBuddyPreferences(data: UpdatePreferencesInput) {
         lookingForBuddy,
         preferredMedium: preferredMedium || "English",
         subjects: subjects || [],
+        tags: tags || [],
         isVisible: true,
       },
       update: {
@@ -395,6 +406,7 @@ export async function updateMyBuddyPreferences(data: UpdatePreferencesInput) {
         lookingForBuddy,
         preferredMedium: preferredMedium || "English",
         subjects: subjects || [],
+        ...(tags !== undefined ? { tags } : {}),
       },
     });
 

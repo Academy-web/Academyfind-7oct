@@ -9,6 +9,7 @@ export default function UserFilters() {
 
     const currentSearch = searchParams.get("search") || "";
     const currentRole = searchParams.get("role") || "";
+    const currentTag = searchParams.get("tag") || "";
 
     const updateFilter = (key: string, value: string) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -31,6 +32,18 @@ export default function UserFilters() {
                     onBlur={(e) => updateFilter("search", e.target.value)} 
                     onKeyDown={(e) => e.key === 'Enter' && updateFilter("search", e.currentTarget.value)}
                     className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+            </div>
+
+            {/* Student Tag Filter */}
+            <div className="w-full md:w-56 relative">
+                <input 
+                    type="text"
+                    placeholder="Filter by Student Tag (e.g. Guitar, UPSC)..."
+                    defaultValue={currentTag}
+                    onBlur={(e) => updateFilter("tag", e.target.value)} 
+                    onKeyDown={(e) => e.key === 'Enter' && updateFilter("tag", e.currentTarget.value)}
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700 placeholder:text-slate-400"
                 />
             </div>
 
