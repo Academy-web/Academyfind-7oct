@@ -226,10 +226,10 @@ export default function PostHero({ post }: PostHeroProps) {
               <span>{Intl.NumberFormat("en-IN").format(post.viewCount)}</span>
             </div>
 
-            {/* ❌ 6. Upgraded pill for "Updated" state */}
+            {/* Upgraded pill for "Updated" state - only show if updated at least 24h after publication */}
             {post.updatedAt &&
               post.publishedAt &&
-              post.updatedAt.getTime() !== post.publishedAt.getTime() && (
+              post.updatedAt.getTime() - post.publishedAt.getTime() > 24 * 60 * 60 * 1000 && (
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
                   Updated{" "}
                   {new Intl.DateTimeFormat("en-IN", {

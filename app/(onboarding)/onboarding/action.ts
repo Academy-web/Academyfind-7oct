@@ -95,6 +95,38 @@ export async function completeOnboarding(
         });
       }
 
+      // Auto-sync selected category names into StudentProfile tags
+      if (data.categories.length > 0) {
+        const selectedCategories = await tx.category.findMany({
+          where: { id: { in: data.categories } },
+          select: { name: true },
+        });
+        const categoryTags = selectedCategories.map((c) => c.name.trim()).filter(Boolean);
+
+        if (categoryTags.length > 0) {
+          const existingProfile = await tx.studentProfile.findUnique({
+            where: { userId: session.user.id },
+            select: { tags: true },
+          });
+
+          const mergedTags = Array.from(
+            new Set([...(existingProfile?.tags ?? []), ...categoryTags])
+          );
+
+          await tx.studentProfile.upsert({
+            where: { userId: session.user.id },
+            create: {
+              userId: session.user.id,
+              tags: mergedTags,
+              isVisible: true,
+            },
+            update: {
+              tags: mergedTags,
+            },
+          });
+        }
+      }
+
       // Mark onboarding complete and set phone
       await tx.user.update({
         where: {
@@ -114,10 +146,17 @@ export async function completeOnboarding(
     return {
       success: true,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[ONBOARDING_COMPLETE]", error);
     
-    if (error.code === 'P2002' && error.meta?.target?.includes('username')) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      (error as { code: string }).code === "P2002" &&
+      "meta" in error &&
+      String((error as { meta?: { target?: string[] } }).meta?.target).includes("username")
+    ) {
       return {
         success: false,
         error: "This username is already taken. Please choose another one.",

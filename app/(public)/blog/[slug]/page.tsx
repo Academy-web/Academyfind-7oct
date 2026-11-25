@@ -59,8 +59,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url,
       type: "article",
-      publishedTime: post.createdAt?.toISOString(),
-      modifiedTime: post.updatedAt?.toISOString(),
+      publishedTime: (post.publishedAt || post.createdAt)?.toISOString(),
+      modifiedTime: (post.updatedAt || post.publishedAt || post.createdAt)?.toISOString(),
       images: post.coverImage ? [post.coverImage] : [],
     },
     twitter: {
@@ -100,8 +100,8 @@ export default async function BlogDetailPage({
     "headline": post.title,
     "description": post.excerpt || "",
     "image": post.coverImage ? [post.coverImage] : [],
-    "datePublished": post.createdAt,
-    "dateModified": post.updatedAt,
+    "datePublished": (post.publishedAt || post.createdAt)?.toISOString(),
+    "dateModified": (post.updatedAt || post.publishedAt || post.createdAt)?.toISOString(),
     "author": [{
       "@type": "Person",
       "name": post.authorProfile?.displayName || post.authorProfile?.username || "AcademyFind Team",

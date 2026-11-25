@@ -29,6 +29,7 @@ import {
     KeyRound,
     Percent,
     Sparkles,
+    GraduationCap,
 } from "lucide-react";
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
@@ -178,6 +179,7 @@ export default async function AdminLayout({
 
                         <SidebarLink href="/af-ass-manage/institutes" icon={<Building2 />} label="All Institutes" />
                         <SidebarLink href="/af-ass-manage/users" icon={<Users />} label="User Management" />
+                        <SidebarLink href="/af-ass-manage/students" icon={<GraduationCap />} label="Students & Tags" />
                         <SidebarLink href="/af-ass-manage/sales_manager" icon={<Briefcase />} label="Sales Managers" count={salesManagerUpdateCount} />
                         <SidebarLink href="/af-ass-manage/sales_requests" icon={<Briefcase />} label="↳ Assignment Requests" count={pendingSalesRequests} />
 

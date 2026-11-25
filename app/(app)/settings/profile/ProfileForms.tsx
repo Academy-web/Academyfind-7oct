@@ -535,38 +535,40 @@ export function ProfileForms({ user, student, teacher }: Props) {
       </SettingsCard>
 
       {/* Student profile section */}
-      <SettingsCard title="Student profile">
-        <form action={studentAction} className="space-y-4">
-          <Toggle
-            name="enabled"
-            label="Enable public student profile"
-            defaultChecked={student?.isVisible ?? Boolean(student)}
-          />
-          <Field label="Headline" name="headline" defaultValue={student?.headline} />
-          <TextArea label="Bio" name="bio" defaultValue={student?.bio} />
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field
-              label="Target exam"
-              name="targetExam"
-              defaultValue={student?.targetExam}
+      <div id="student-tags" className="scroll-mt-6">
+        <SettingsCard title="Student profile">
+          <form action={studentAction} className="space-y-4">
+            <Toggle
+              name="enabled"
+              label="Enable public student profile"
+              defaultChecked={student?.isVisible ?? Boolean(student)}
             />
-            <Field
-              label="Current class"
-              name="currentClass"
-              defaultValue={student?.currentClass}
-            />
-          </div>
-          <StudentTagInput initialTags={student?.tags ?? []} />
-          <p className="text-sm text-slate-500">
-            Institute-specific courses and batches are read-only here. Manage them
-            at the institute.
-          </p>
-          <div className="flex items-center gap-4">
-            <SubmitButton />
-            <ActionMessage state={studentState} />
-          </div>
-        </form>
-      </SettingsCard>
+            <Field label="Headline" name="headline" defaultValue={student?.headline} />
+            <TextArea label="Bio" name="bio" defaultValue={student?.bio} />
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field
+                label="Target exam"
+                name="targetExam"
+                defaultValue={student?.targetExam}
+              />
+              <Field
+                label="Current class"
+                name="currentClass"
+                defaultValue={student?.currentClass}
+              />
+            </div>
+            <StudentTagInput initialTags={student?.tags ?? []} />
+            <p className="text-sm text-slate-500">
+              Institute-specific courses and batches are read-only here. Manage them
+              at the institute.
+            </p>
+            <div className="flex items-center gap-4">
+              <SubmitButton />
+              <ActionMessage state={studentState} />
+            </div>
+          </form>
+        </SettingsCard>
+      </div>
 
       {/* Teacher profile section */}
       <SettingsCard title="Teacher profile">

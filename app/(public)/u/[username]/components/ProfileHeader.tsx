@@ -15,12 +15,13 @@ import {
 } from "lucide-react";
 
 import type { CompletePublicProfile } from "@/lib/profile/queries";
+import { EditStudentTagsModal } from "@/components/student/EditStudentTagsModal";
 
 export function ProfileHeader({
   profile,
   isOwnProfile,
 }: {
-  profile: any;
+  profile: CompletePublicProfile;
   isOwnProfile: boolean;
 }) {
   const [copied, setCopied] = useState(false);
@@ -175,7 +176,7 @@ export function ProfileHeader({
             </div>
 
             {/* Student Interest Tags Preview */}
-            {profile.studentProfile?.tags && profile.studentProfile.tags.length > 0 && (
+            {profile.studentProfile?.tags && profile.studentProfile.tags.length > 0 ? (
               <div className="mt-3 flex flex-wrap items-center gap-1.5">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Interests:</span>
                 {profile.studentProfile.tags.slice(0, 4).map((t: string) => (
@@ -191,8 +192,15 @@ export function ProfileHeader({
                     +{profile.studentProfile.tags.length - 4} more
                   </span>
                 )}
+                {isOwnProfile && (
+                  <EditStudentTagsModal initialTags={profile.studentProfile.tags} triggerStyle="pill" />
+                )}
               </div>
-            )}
+            ) : isOwnProfile ? (
+              <div className="mt-3 flex items-center gap-1.5">
+                <EditStudentTagsModal initialTags={[]} triggerStyle="pill" />
+              </div>
+            ) : null}
 
             {/* Stats bar */}
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-500">

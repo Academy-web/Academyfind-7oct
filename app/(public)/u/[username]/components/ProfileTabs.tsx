@@ -33,6 +33,7 @@ import {
 import type { CompletePublicProfile } from "@/lib/profile/queries";
 import { MembershipCard } from "@/app/(public)/u/[username]/components/MembershipCard";
 import { PortfolioTab } from "@/app/(public)/u/[username]/components/PortfolioSection";
+import { EditStudentTagsModal } from "@/components/student/EditStudentTagsModal";
 
 type Tab = "Dashboard" | "Overview" | "Portfolio" | "Student" | "Teacher" | "Blogs" | "Reviews" | "Activity";
 
@@ -165,9 +166,14 @@ function StudentTab({
     <div className="space-y-5">
       {/* Global student profile card */}
       <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-bold text-slate-900">
-          {sp.headline ?? "Student Profile"}
-        </h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-xl font-bold text-slate-900">
+            {sp.headline ?? "Student Profile"}
+          </h2>
+          {isOwnProfile && (
+            <EditStudentTagsModal initialTags={sp.tags ?? []} triggerStyle="button" />
+          )}
+        </div>
         {sp.bio && (
           <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600">
             {sp.bio}
@@ -182,12 +188,17 @@ function StudentTab({
           )}
         </div>
 
-        {sp.tags && sp.tags.length > 0 && (
+        {sp.tags && sp.tags.length > 0 ? (
           <div className="mt-5 pt-4 border-t border-slate-100">
-            <p className="mb-2.5 text-xs font-bold uppercase tracking-wider text-amber-700/80 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-amber-500" />
-              Learning Interests & Targeted Coaching Tags
-            </p>
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-700/80 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-amber-500" />
+                Learning Interests & Targeted Coaching Tags
+              </p>
+              {isOwnProfile && (
+                <EditStudentTagsModal initialTags={sp.tags} triggerStyle="pill" />
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {sp.tags.map((t: string) => (
                 <span
@@ -195,12 +206,16 @@ function StudentTab({
                   className="inline-flex items-center gap-1.5 bg-amber-50/80 border border-amber-200/90 text-amber-900 text-xs font-semibold px-3 py-1 rounded-full shadow-2xs hover:bg-amber-100/80 transition-colors"
                 >
                   <Tag className="w-3 h-3 text-amber-600" />
-                  {t}
+                  #{t}
                 </span>
               ))}
             </div>
           </div>
-        )}
+        ) : isOwnProfile ? (
+          <div className="mt-5 pt-4 border-t border-slate-100">
+            <EditStudentTagsModal initialTags={[]} triggerStyle="banner" />
+          </div>
+        ) : null}
 
         {sp.subjects && sp.subjects.length > 0 && (
           <div className="mt-4">
