@@ -1,25 +1,41 @@
 import { prisma } from "@/lib/prisma";
-import SubscriptionClient from "./Subscription"; 
+import { getInstituteEntitlements } from "@/lib/subscription/entitlements";
+import SubscriptionClient from "./Subscription";
 
-export default async function SubscriptionPage({ params }: { params: Promise<{ instituteId: string }> }) {
-    const { instituteId } = await params;
-    
-    // Server par data fetch karein
-    const institute = await prisma.institute.findUnique({ 
-        where: { id: instituteId } 
-    });
-    if (!institute) return null;
-    
-    // Server par data fetch karein
-    const latestPayment = await prisma.subscriptionPayment.findFirst({
-        where: { instituteId: institute.id, status: "APPROVED", planRequested: institute.subscriptionPlan },
-        orderBy: { createdAt: "desc" }
-    });
-    const currentBillingCycle = latestPayment?.billingCycle === "ANNUAL" ? "ANNUAL" : "MONTHLY";
+export default async function SubscriptionPage({
+  params,
+}: {
+  params: Promise<{ instituteId: string }>;
+}) {
+  const { instituteId } = await params;
 
-    const currentPlan = institute.subscriptionPlan;
+  const [institute, entitlements] = await Promise.all([
+    prisma.institute.findUnique({ where: { id: instituteId }, select: { id: true } }),
+    getInstituteEntitlements(instituteId),
+  ]);
 
-    return (
-        <SubscriptionClient currentPlan={currentPlan} currentBillingCycle={currentBillingCycle} instituteId={institute.id}/>
-    );
+  if (!institute || !entitlements) return null;
+
+  const latestPayment = await prisma.subscriptionPayment.findFirst({
+    where: {
+      instituteId: institute.id,
+      status: "APPROVED",
+      planRequested: entitlements.effectivePlan,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  const currentBillingCycle =
+    latestPayment?.billingCycle === "ANNUAL" ? "ANNUAL" : "MONTHLY";
+
+  return (
+    <SubscriptionClient
+      currentPlan={entitlements.effectivePlan}
+      currentBillingCycle={currentBillingCycle}
+      instituteId={institute.id}
+      isTrialActive={entitlements.isTrialActive}
+      canActivateTrial={entitlements.canActivateTrial}
+      daysRemaining={entitlements.daysRemaining}
+      trialExpiresAt={entitlements.expiresAt ? entitlements.expiresAt.toISOString() : null}
+    />
+  );
 }

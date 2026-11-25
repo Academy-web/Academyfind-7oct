@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ShieldAlert, ArrowRight, Sparkles, Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AlertTriangle, ShieldAlert, ArrowRight, Sparkles, Clock, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SubscriptionExpiryBannerProps {
@@ -7,6 +11,9 @@ interface SubscriptionExpiryBannerProps {
   instituteName: string;
   plan: string;
   planExpiresAt: Date | string | null;
+  isTrialActive?: boolean;
+  canActivateTrial?: boolean;
+  daysRemaining?: number | null;
 }
 
 export function SubscriptionExpiryBanner({
@@ -14,7 +21,109 @@ export function SubscriptionExpiryBanner({
   instituteName,
   plan,
   planExpiresAt,
+  isTrialActive = false,
+  canActivateTrial = false,
+  daysRemaining: propDaysRemaining = null,
 }: SubscriptionExpiryBannerProps) {
+  const router = useRouter();
+  const [activating, setActivating] = useState(false);
+
+  const handleQuickActivate = async () => {
+    setActivating(true);
+    try {
+      const res = await fetch("/api/trial/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "dashboard", instituteId }),
+      });
+      if (res.ok) {
+        router.refresh();
+      }
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  // State 0A: Eligible BASIC institute that hasn't activated its 7-day Elite trial yet
+  if (canActivateTrial && plan === "BASIC") {
+    return (
+      <div className="mb-6 rounded-2xl border border-amber-300/90 bg-gradient-to-r from-amber-50 via-amber-100/60 to-orange-50 p-4 sm:p-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+              <Rocket className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-bold text-amber-950 text-sm sm:text-base">
+                  Your 7-Day Elite (ULTRA) Free Trial Is Waiting!
+                </h4>
+                <span className="text-[10px] font-extrabold text-amber-900 bg-amber-200/80 px-2.5 py-0.5 rounded-full">
+                  No Card Required
+                </span>
+              </div>
+              <p className="text-xs text-amber-900/90 mt-1 max-w-2xl leading-relaxed">
+                Unlock top search rankings, real-time student leads, LMS, and visitor contact details for <strong>{instituteName}</strong> free for 7 days.
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={handleQuickActivate}
+            disabled={activating}
+            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl shadow-md text-xs h-9 px-4 shrink-0 cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+            {activating ? "Activating..." : "Activate 7-Day Free Trial"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // State 0B: Active 7-day Elite Trial
+  if (isTrialActive && planExpiresAt) {
+    const expiresAt = new Date(planExpiresAt);
+    const daysLeft =
+      propDaysRemaining ??
+      Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+    const formattedDate = expiresAt.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+    return (
+      <div className="mb-6 rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-50 via-yellow-50/80 to-orange-50/70 p-4 sm:p-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-bold text-amber-950 text-sm sm:text-base">
+                  7-Day Elite (ULTRA) Free Trial Active ({daysLeft === 0 ? "Ends Today" : `${daysLeft} days left`})
+                </h4>
+                <span className="text-[10px] font-bold text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-full">
+                  Ends {formattedDate}
+                </span>
+              </div>
+              <p className="text-xs text-amber-900/90 mt-1 max-w-2xl leading-relaxed">
+                You are enjoying full Elite features for <strong>{instituteName}</strong>. Choose a paid plan anytime before {formattedDate} to keep top search ranking and student leads active.
+              </p>
+            </div>
+          </div>
+          <Button asChild size="sm" className="bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md text-xs h-9 px-4 shrink-0">
+            <Link href={`/manager/${instituteId}/subscription`}>
+              Upgrade &amp; Keep Benefits <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!planExpiresAt) return null;
 
   const expiresAt = new Date(planExpiresAt);

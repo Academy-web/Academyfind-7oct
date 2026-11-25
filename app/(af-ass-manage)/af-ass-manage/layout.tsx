@@ -28,6 +28,7 @@ import {
     Share2,
     KeyRound,
     Percent,
+    Sparkles,
 } from "lucide-react";
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
@@ -126,11 +127,12 @@ export default async function AdminLayout({
     ]);
 
     // New route counts
-    const [pendingMemberships, pendingChatReports, salesManagerUpdateCount, pendingSalesRequests] = await Promise.all([
+    const [pendingMemberships, pendingChatReports, salesManagerUpdateCount, pendingSalesRequests, activeTrialCount] = await Promise.all([
         prisma.instituteMembership.count({ where: { status: "PENDING" } }),
         prisma.messageReport.count({ where: { status: "PENDING" } }),
         prisma.adminNotification.count({ where: { userId: session.user.id, type: "SALES_ASSIGNMENT_UPDATE", isRead: false } }),
         prisma.salesAssignmentRequest.count({ where: { status: "PENDING" } }),
+        prisma.instituteTrial.count({ where: { status: "ACTIVE" } }),
     ]);
 
     return (
@@ -170,6 +172,7 @@ export default async function AdminLayout({
                         <SidebarLink href="/af-ass-manage/lead-integrations" icon={<Share2 />} label="Ad & Webhook Leads" count={inboundLeadCount} />
                         <SidebarLink href="/af-ass-manage/contactmessages" icon={<Contact />} label="Contact Messages" count={contactCount} />
                         <SidebarLink href="/af-ass-manage/payments" icon={<Pyramid />} label="Payment Approvals" count={paymentCount} />
+                        <SidebarLink href="/af-ass-manage/trials" icon={<Sparkles />} label="Trials & Conversions" count={activeTrialCount} />
                         <SidebarLink href="/af-ass-manage/advertisements" icon={<Megaphone />} label="Advertisements" count={adCount} />
                         <SidebarLink href="/af-ass-manage/notices" icon={<BellIcon />} label="Notice Board" />
 

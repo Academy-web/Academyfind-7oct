@@ -52,35 +52,35 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Payment record not found' }, { status: 404 });
     }
 
-    const updatedPayment = await prisma.subscriptionPayment.update({
+    if (status === 'APPROVED') {
+      const { approvePayment } = await import('@/lib/User/admin/adminPaymentApprove');
+      const result = await approvePayment(id, user.id);
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error || 'Failed to approve payment' },
+          { status: (result as any).statusCode || 400 }
+        );
+      }
+    } else if (status === 'REJECTED') {
+      const { rejectPayment } = await import('@/lib/User/admin/adminPaymentApprove');
+      const result = await rejectPayment(id);
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error || 'Failed to reject payment' },
+          { status: (result as any).statusCode || 400 }
+        );
+      }
+    } else {
+      return NextResponse.json({ success: false, error: 'Invalid status' }, { status: 400 });
+    }
+
+    const updatedPayment = await prisma.subscriptionPayment.findUnique({
       where: { id },
-      data: { status },
       include: {
         user: { select: { id: true, name: true, email: true } },
         institute: { select: { id: true, name: true } },
       }
     });
-
-    // If approved, upgrade the institute subscription plan
-    if (status === 'APPROVED' && payment.instituteId && payment.planRequested) {
-      await prisma.institute.update({
-        where: { id: payment.instituteId },
-        data: { subscriptionPlan: payment.planRequested as any },
-      }).catch(e => console.error("Failed to upgrade institute subscription plan:", e));
-
-      // 🔔 Notify Sales Manager & Admin about plan upgrade
-      try {
-        const { notifySalesManagerOnPlanUpgrade } = await import("@/lib/notifications/salesNotifications");
-        await notifySalesManagerOnPlanUpgrade({
-          instituteId: payment.instituteId,
-          instituteName: payment.institute?.name,
-          plan: payment.planRequested,
-          amountPaid: payment.amountPaid,
-        });
-      } catch (e) {
-        console.error("Sales manager plan upgrade notification error:", e);
-      }
-    }
 
     return NextResponse.json({ success: true, data: updatedPayment });
   } catch (error: any) {

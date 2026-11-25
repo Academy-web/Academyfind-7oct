@@ -22,15 +22,47 @@ interface SubscriptionClientProps {
   currentPlan: string;
   currentBillingCycle: string;
   instituteId: string;
+  isTrialActive?: boolean;
+  canActivateTrial?: boolean;
+  daysRemaining?: number | null;
+  trialExpiresAt?: string | null;
 }
 
 export default function SubscriptionClient({
   currentPlan,
   currentBillingCycle,
   instituteId,
+  isTrialActive = false,
+  canActivateTrial = false,
+  daysRemaining = null,
+  trialExpiresAt = null,
 }: SubscriptionClientProps) {
   const [isAnnual, setIsAnnual] = useState(true); // Default to annual as shown in main image
+  const [activatingTrial, setActivatingTrial] = useState(false);
+  const [trialError, setTrialError] = useState<string | null>(null);
   const router = useRouter();
+
+  const handleActivateTrial = async () => {
+    setActivatingTrial(true);
+    setTrialError(null);
+    try {
+      const res = await fetch("/api/trial/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "dashboard", instituteId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setTrialError(data.error || "Unable to start trial.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setTrialError("Network error while activating trial.");
+    } finally {
+      setActivatingTrial(false);
+    }
+  };
 
   const planPriority: Record<string, number> = {
     BASIC: 0,
@@ -242,6 +274,65 @@ export default function SubscriptionClient({
         </div>
       </div>
 
+      {/* 🚀 7-Day Free Elite Trial Banner */}
+      {(canActivateTrial || isTrialActive) && (
+        <div className="bg-gradient-to-r from-amber-50 via-amber-100/80 to-orange-50 border border-amber-300 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              {isTrialActive ? (
+                <>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-200/90 text-amber-950 font-extrabold text-[10px] uppercase tracking-wider mb-1">
+                    7-Day Elite Trial Active • {daysRemaining ?? 0} Days Left
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900">
+                    You are currently experiencing Elite (ULTRA) free
+                    {trialExpiresAt
+                      ? ` until ${new Date(trialExpiresAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}`
+                      : ""}
+                    .
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-700 mt-0.5">
+                    Select any plan below to convert before your trial ends and keep priority ranking &amp; student leads uninterrupted.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-200/90 text-amber-950 font-extrabold text-[10px] uppercase tracking-wider mb-1">
+                    Free 7-Day Trial • No Card Required
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900">
+                    Try Elite (ULTRA) Free for 7 Days Before You Pay
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-700 mt-0.5">
+                    Get top search rankings, LMS, and visitor contact details free for 7 days. Moves back to Basic automatically if you don&apos;t upgrade.
+                  </p>
+                  {trialError && (
+                    <p className="text-xs font-semibold text-rose-700 mt-1">{trialError}</p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          {canActivateTrial && (
+            <button
+              type="button"
+              onClick={handleActivateTrial}
+              disabled={activatingTrial}
+              className="whitespace-nowrap px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-sm shadow-lg transition-all active:scale-95 cursor-pointer disabled:opacity-60"
+            >
+              {activatingTrial ? "Activating..." : "Activate 7-Day Free Trial →"}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* 🪔 Diwali Special Announcement Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-5 sm:p-6 text-white shadow-xl shadow-orange-500/20 mb-4 flex flex-col sm:flex-row items-center justify-between gap-5 border border-amber-300/40">
         <div className="flex items-center gap-4 text-center sm:text-left">
@@ -281,9 +372,12 @@ export default function SubscriptionClient({
 
           const priceData = isAnnual ? plan.pricing.annual : plan.pricing.monthly;
           const isCurrentCycleAndPlan =
+            !isTrialActive &&
             currentPlan === plan.id &&
             ((isAnnual && currentBillingCycle === "ANNUAL") ||
               (!isAnnual && currentBillingCycle === "MONTHLY"));
+          const isLowerThanPaidPlan =
+            !isTrialActive && currentPlanRank > (planPriority[plan.id] ?? 0);
 
           return (
             <div
@@ -387,13 +481,13 @@ export default function SubscriptionClient({
               <div className="pt-2">
                 <Button
                   disabled={
-                    isCurrentCycleAndPlan || currentPlanRank > (planPriority[plan.id] ?? 0)
+                    isCurrentCycleAndPlan || isLowerThanPaidPlan
                   }
                   onClick={() => handleCheckout(plan.id)}
                   className={`w-full py-6 rounded-2xl font-black text-sm sm:text-base transition-all duration-200 cursor-pointer ${
                     isCurrentCycleAndPlan
                       ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
-                      : currentPlanRank > (planPriority[plan.id] ?? 0)
+                      : isLowerThanPaidPlan
                       ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                       : isVerified && isAnnual
                       ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-orange-500/25 active:scale-95"
@@ -404,11 +498,13 @@ export default function SubscriptionClient({
                 >
                   {isCurrentCycleAndPlan
                     ? "Active Plan"
-                    : currentPlan === plan.id
+                    : isTrialActive && plan.id === "ULTRA"
+                    ? "Keep Elite — Subscribe Now"
+                    : !isTrialActive && currentPlan === plan.id
                     ? isAnnual
                       ? "Switch to Annual"
                       : "Switch to Monthly"
-                    : currentPlanRank > (planPriority[plan.id] ?? 0)
+                    : isLowerThanPaidPlan
                     ? "Included in current plan"
                     : isVerified && isAnnual
                     ? "Claim Free Diwali Offer 🪔"

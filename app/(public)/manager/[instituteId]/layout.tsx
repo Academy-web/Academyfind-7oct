@@ -101,15 +101,18 @@ export default async function ManagerDashBoardLayout({
         }
     }
 
-    const institute = await prisma.institute.findUnique({
-        where: { id: instituteId },
-        select: { name: true, subscriptionPlan: true, planExpiresAt: true, isVerified: true }
-    });
+    const [institute, entitlements] = await Promise.all([
+        prisma.institute.findUnique({
+            where: { id: instituteId },
+            select: { name: true, subscriptionPlan: true, planExpiresAt: true, isVerified: true }
+        }),
+        (await import("@/lib/subscription/entitlements")).getInstituteEntitlements(instituteId),
+    ]);
 
-    if (!institute) return <div>Institute not found.</div>;
+    if (!institute || !entitlements) return <div>Institute not found.</div>;
 
-    const plan = institute.subscriptionPlan; // BASIC, PREMIUM, ULTRA, VERIFIED
-    const isVerifiedType = plan === "VERIFIED" || (Boolean(institute.isVerified) && plan !== "PREMIUM" && plan !== "ULTRA");
+    const plan = entitlements.effectivePlan; // Single source of truth: Paid > Active Trial > BASIC
+    const isVerifiedType = entitlements.hasVerifiedBadge;
 
     // Count pending membership requests, admissions, & unlocks
     const [pendingCount, admissionCount, unlockCount] = await Promise.all([
@@ -383,7 +386,10 @@ export default async function ManagerDashBoardLayout({
                         instituteId={instituteId}
                         instituteName={institute.name}
                         plan={plan}
-                        planExpiresAt={institute.planExpiresAt}
+                        planExpiresAt={entitlements.expiresAt ?? institute.planExpiresAt}
+                        isTrialActive={entitlements.isTrialActive}
+                        canActivateTrial={entitlements.canActivateTrial}
+                        daysRemaining={entitlements.daysRemaining}
                     />
                     {children}
                 </main>
