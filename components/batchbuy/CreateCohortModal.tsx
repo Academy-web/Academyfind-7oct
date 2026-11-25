@@ -110,7 +110,29 @@ export function CreateCohortModal({
   const selectedBatch =
     selectedInstitute?.batches.find((b) => b.id === selectedBatchId) || null;
 
-  // Load initial institute options when opened without preset
+  const performSearch = async (term: string) => {
+    setLoadingInstitutes(true);
+    try {
+      const res = await searchInstitutesAction(term);
+      if (res.success) {
+        setInstituteOptions(res.institutes);
+        if (res.institutes.length > 0) {
+          const isStillPresent = res.institutes.some(
+            (i) => i.id === selectedInstituteId
+          );
+          if (!selectedInstituteId || !isStillPresent) {
+            const first = res.institutes[0];
+            setSelectedInstituteId(first.id);
+            setSelectedBatchId(first.batches[0]?.id || "__auto_comp__");
+          }
+        }
+      }
+    } finally {
+      setLoadingInstitutes(false);
+    }
+  };
+
+  // Load initial institute options when opened without preset & debounce on typing
   useEffect(() => {
     if (!open || presetInstitute) return;
     let active = true;
@@ -131,7 +153,7 @@ export function CreateCohortModal({
         }
       }
       if (active) setLoadingInstitutes(false);
-    }, 220);
+    }, 300);
 
     return () => {
       active = false;
@@ -331,28 +353,100 @@ export function CreateCohortModal({
               </h3>
 
               {!presetInstitute && (
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <Input
-                      value={instituteSearch}
-                      onChange={(e) => setInstituteSearch(e.target.value)}
-                      placeholder="Search coaching institute or city (e.g., Allen, Kota, Delhi)..."
-                      className="pl-9 h-10 rounded-xl bg-white"
-                    />
-                  </div>
+                <div className="space-y-3">
                   <div className="space-y-1.5">
                     <Label
-                      htmlFor="create-cohort-institute"
+                      htmlFor="create-cohort-search-input"
                       className="text-xs font-semibold text-slate-700"
                     >
-                      Select Institute
+                      Search Coaching Center / Institute
                     </Label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <Input
+                          id="create-cohort-search-input"
+                          value={instituteSearch}
+                          onChange={(e) => setInstituteSearch(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              performSearch(instituteSearch);
+                            }
+                          }}
+                          placeholder="Type name or city (e.g. Entropy, Allen, Kota)..."
+                          className="pl-9 pr-8 h-10 rounded-xl bg-white text-sm"
+                        />
+                        {instituteSearch && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setInstituteSearch("");
+                              performSearch("");
+                            }}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded"
+                            title="Clear search"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() => performSearch(instituteSearch)}
+                        disabled={loadingInstitutes}
+                        className="h-10 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shrink-0 shadow-sm"
+                      >
+                        {loadingInstitutes ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Search className="w-3.5 h-3.5" />
+                        )}
+                        <span>Search</span>
+                      </Button>
+                    </div>
+
+                    {/* Search result count / status hint */}
+                    <div className="text-[11px] text-slate-500 px-0.5 min-h-[16px] flex items-center">
+                      {loadingInstitutes ? (
+                        <span className="text-amber-600 font-medium flex items-center gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Searching coaching institutes...
+                        </span>
+                      ) : instituteSearch.trim() ? (
+                        instituteOptions.length > 0 ? (
+                          <span className="text-emerald-700 font-medium">
+                            ✓ Found {instituteOptions.length} matching institute{instituteOptions.length > 1 ? "s" : ""} — choose below:
+                          </span>
+                        ) : (
+                          <span className="text-rose-600 font-medium">
+                            No institutes matched &quot;{instituteSearch}&quot;. Try city name or shorter keyword.
+                          </span>
+                        )
+                      ) : (
+                        <span>Type coaching name &amp; click Search, or pick from popular institutes:</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label
+                        htmlFor="create-cohort-institute"
+                        className="text-xs font-semibold text-slate-700"
+                      >
+                        Select Institute / Center
+                      </Label>
+                      {instituteOptions.length > 0 && (
+                        <span className="text-[11px] text-slate-500 font-medium">
+                          {instituteOptions.length} available
+                        </span>
+                      )}
+                    </div>
                     <select
                       id="create-cohort-institute"
                       value={selectedInstituteId}
                       onChange={(e) => handleSelectInstitute(e.target.value)}
-                      disabled={loadingInstitutes}
+                      disabled={loadingInstitutes || instituteOptions.length === 0}
                       className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
                     >
                       {instituteOptions.length === 0 ? (
