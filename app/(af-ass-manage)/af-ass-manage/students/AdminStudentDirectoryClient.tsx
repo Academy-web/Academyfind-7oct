@@ -36,7 +36,7 @@ interface StudentUser {
   image: string | null;
   username: string | null;
   createdAt: Date;
-  emailVerified: Date | null;
+  emailVerified: boolean;
 }
 
 interface StudentItem {

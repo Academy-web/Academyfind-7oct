@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest) {
 
     if (status === 'APPROVED') {
       const { approvePayment } = await import('@/lib/User/admin/adminPaymentApprove');
-      const result = await approvePayment(id, user.id);
+      const result = await approvePayment(id, session.user.id);
       if (!result.success) {
         return NextResponse.json(
           { success: false, error: result.error || 'Failed to approve payment' },

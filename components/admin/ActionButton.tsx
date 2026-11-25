@@ -23,8 +23,8 @@ export default function ActionButtons({ paymentId }: { paymentId: string }) {
         setIsLoading(true);
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
         const res = await approvePayment(paymentId);
-        if (res.success) toast.success(res.message || "Payment approved sucessfully");
-        else toast.error(res.error || "payment can't be approved");
+        if (res.success) toast.success(("message" in res && res.message) || "Payment approved sucessfully");
+        else toast.error(("error" in res && res.error) || "payment can't be approved");
         setIsLoading(false);
     };
 

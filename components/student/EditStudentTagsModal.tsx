@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { saveStudentTags } from "@/lib/student/tagActions";
 import { POPULAR_STUDENT_TAGS } from "./StudentTagInput";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 interface EditStudentTagsModalProps {
   initialTags?: string[];

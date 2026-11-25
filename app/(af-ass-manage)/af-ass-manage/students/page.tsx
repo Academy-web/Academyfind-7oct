@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@/app/generated/prisma/client";
 import { AdminStudentDirectoryClient } from "./AdminStudentDirectoryClient";
 
 export const metadata = {
