@@ -48,7 +48,7 @@ export default async function AdminStudentsPage({
       { tags: { hasSome: candidateTags } },
       {
         user: {
-          preference: {
+          preferences: {
             preferredCategories: {
               some: {
                 category: {

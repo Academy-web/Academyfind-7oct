@@ -58,7 +58,7 @@ export default async function AdminUsersPage({
                     }
                 },
                 {
-                    preference: {
+                    preferences: {
                         preferredCategories: {
                             some: {
                                 category: {
