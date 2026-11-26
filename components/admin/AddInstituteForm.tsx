@@ -8,6 +8,7 @@ import { Save, ArrowLeft, Image as ImageIcon, UploadCloud, MapPin } from "lucide
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import LocationAutocomplete from "../search/LocationAutoComplete";
+import CityAutoComplete, { SelectedCity } from "../search/CityAutoComplete";
 
 export default function AddInstituteForm({ 
     allCities, 
@@ -21,6 +22,7 @@ export default function AddInstituteForm({
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
     // Map/Location States
+    const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
     const [address, setAddress] = useState("");
     const [lat, setLat] = useState<string>("");
     const [lng, setLng] = useState<string>("");
@@ -59,11 +61,17 @@ export default function AddInstituteForm({
     };
 
     async function handleFormSubmit(formData: FormData) {
+        if (!selectedCity?.id) {
+            toast.error("Please search and select a city.");
+            return;
+        }
+
         setIsLoading(true);
          if (imageFile) {
             formData.append("imageFile", imageFile);
         }
         
+        formData.set("cityId", selectedCity.id);
         formData.set("address", address);
         formData.set("latitude", lat);
         formData.set("longitude", lng);
@@ -117,10 +125,11 @@ export default function AddInstituteForm({
                     </div>
                     <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">City *</label>
-                        <select name="cityId" required className="w-full p-2.5 rounded-xl border border-slate-200 bg-white">
-                            <option value="">-- Select City --</option>
-                            {allCities.map(city => <option key={city.id} value={city.id}>{city.name}</option>)}
-                        </select>
+                        <input type="hidden" name="cityId" value={selectedCity?.id || ""} />
+                        <CityAutoComplete
+                            selectedCity={selectedCity}
+                            onCitySelect={setSelectedCity}
+                        />
                     </div>
                 </div>
 
