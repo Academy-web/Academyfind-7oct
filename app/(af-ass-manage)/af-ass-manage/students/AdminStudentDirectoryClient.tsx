@@ -55,6 +55,12 @@ interface StudentItem {
   user: StudentUser;
 }
 
+interface CategoryOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface AdminStudentDirectoryClientProps {
   students: StudentItem[];
   stats: {
@@ -66,9 +72,11 @@ interface AdminStudentDirectoryClientProps {
   topTags: { name: string; count: number }[];
   availableCities: string[];
   availableExams: string[];
+  categories?: CategoryOption[];
   currentFilters: {
     search: string;
     tag: string;
+    category?: string;
     city: string;
     exam: string;
   };
@@ -97,6 +105,7 @@ export function AdminStudentDirectoryClient({
   topTags,
   availableCities,
   availableExams,
+  categories = [],
   currentFilters,
 }: AdminStudentDirectoryClientProps) {
   const router = useRouter();
@@ -105,6 +114,7 @@ export function AdminStudentDirectoryClient({
   // Local state for search inputs
   const [searchInput, setSearchInput] = useState(currentFilters.search);
   const [selectedTag, setSelectedTag] = useState(currentFilters.tag);
+  const [selectedCategory, setSelectedCategory] = useState(currentFilters.category || "");
   const [selectedCity, setSelectedCity] = useState(currentFilters.city);
   const [selectedExam, setSelectedExam] = useState(currentFilters.exam);
 
@@ -124,10 +134,11 @@ export function AdminStudentDirectoryClient({
   } | null>(null);
 
   // Apply filters via URL params
-  const updateFilter = (updates: Partial<{ search: string; tag: string; city: string; exam: string; page: number }>) => {
+  const updateFilter = (updates: Partial<{ search: string; tag: string; category: string; city: string; exam: string; page: number }>) => {
     const params = new URLSearchParams(searchParams.toString());
     const nextSearch = updates.search !== undefined ? updates.search : searchInput;
     const nextTag = updates.tag !== undefined ? updates.tag : selectedTag;
+    const nextCategory = updates.category !== undefined ? updates.category : selectedCategory;
     const nextCity = updates.city !== undefined ? updates.city : selectedCity;
     const nextExam = updates.exam !== undefined ? updates.exam : selectedExam;
     const nextPage = updates.page !== undefined ? updates.page : 1;
@@ -137,6 +148,9 @@ export function AdminStudentDirectoryClient({
 
     if (nextTag.trim()) params.set("tag", nextTag.trim());
     else params.delete("tag");
+
+    if (nextCategory.trim()) params.set("category", nextCategory.trim());
+    else params.delete("category");
 
     if (nextCity.trim()) params.set("city", nextCity.trim());
     else params.delete("city");
@@ -156,14 +170,21 @@ export function AdminStudentDirectoryClient({
   };
 
   const handleTagClick = (tag: string) => {
-    const nextTag = selectedTag === tag ? "" : tag;
-    setSelectedTag(nextTag);
-    updateFilter({ tag: nextTag, page: 1 });
+    const active = selectedCategory || selectedTag;
+    if (active.toLowerCase() === tag.toLowerCase()) {
+      setSelectedTag("");
+      setSelectedCategory("");
+      updateFilter({ tag: "", category: "", page: 1 });
+    } else {
+      setSelectedCategory(tag);
+      updateFilter({ category: tag, tag: "", page: 1 });
+    }
   };
 
   const clearAllFilters = () => {
     setSearchInput("");
     setSelectedTag("");
+    setSelectedCategory("");
     setSelectedCity("");
     setSelectedExam("");
     router.push("/af-ass-manage/students");
@@ -274,7 +295,7 @@ export function AdminStudentDirectoryClient({
   };
 
   const hasActiveFilters = Boolean(
-    currentFilters.search || currentFilters.tag || currentFilters.city || currentFilters.exam
+    currentFilters.search || currentFilters.tag || currentFilters.category || currentFilters.city || currentFilters.exam
   );
 
   return (
@@ -386,8 +407,27 @@ export function AdminStudentDirectoryClient({
             />
           </form>
 
+          {/* Coaching Category Dropdown */}
+          <div className="w-full lg:w-56">
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                updateFilter({ category: e.target.value, tag: "", page: 1 });
+              }}
+              className="w-full px-3 py-2.5 text-xs bg-stone-50/70 hover:bg-stone-50 focus:bg-white rounded-xl border border-stone-200/80 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-hidden transition-all text-stone-800 font-medium"
+            >
+              <option value="">All Coaching Categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Exam Filter */}
-          <div className="w-full lg:w-48">
+          <div className="w-full lg:w-44">
             <select
               value={selectedExam}
               onChange={(e) => {
@@ -406,7 +446,7 @@ export function AdminStudentDirectoryClient({
           </div>
 
           {/* City Filter */}
-          <div className="w-full lg:w-44">
+          <div className="w-full lg:w-40">
             <select
               value={selectedCity}
               onChange={(e) => {
@@ -436,16 +476,16 @@ export function AdminStudentDirectoryClient({
           )}
         </div>
 
-        {/* ── Popular Tags Ribbon (1-Click Tag Filters) ───────────────────── */}
+        {/* ── Popular Categories / Tags Ribbon (1-Click Filters) ──────────── */}
         <div className="pt-2 border-t border-stone-100">
           <div className="flex items-center gap-2 mb-2">
             <Tag className="w-3.5 h-3.5 text-amber-500" />
-            <span className="text-xs font-semibold text-stone-700">Quick Filter by Student Tag:</span>
-            {selectedTag && (
+            <span className="text-xs font-semibold text-stone-700">Quick Filter by Category:</span>
+            {(selectedCategory || selectedTag) && (
               <span className="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full flex items-center gap-1">
-                Active: #{selectedTag}
+                Active: #{selectedCategory || selectedTag}
                 <button
-                  onClick={() => handleTagClick(selectedTag)}
+                  onClick={() => handleTagClick(selectedCategory || selectedTag)}
                   className="hover:text-amber-900"
                 >
                   <X className="w-3 h-3" />
@@ -455,8 +495,9 @@ export function AdminStudentDirectoryClient({
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            {PRESET_POPULAR_TAGS.map((t) => {
-              const isSelected = selectedTag.toLowerCase() === t.toLowerCase();
+            {(categories.length > 0 ? categories.slice(0, 16).map((c) => c.name) : PRESET_POPULAR_TAGS).map((t) => {
+              const active = (selectedCategory || selectedTag).toLowerCase();
+              const isSelected = active === t.toLowerCase();
               return (
                 <button
                   key={t}
@@ -668,8 +709,8 @@ export function AdminStudentDirectoryClient({
                                 onClick={() => handleTagClick(t)}
                                 title={`Filter by #${t}`}
                                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border transition-all ${
-                                  selectedTag.toLowerCase() === t.toLowerCase()
-                                    ? "bg-amber-500 text-white border-amber-600"
+                                  (selectedCategory || selectedTag).toLowerCase() === t.toLowerCase()
+                                    ? "bg-amber-500 text-white border-amber-600 shadow-2xs"
                                     : "bg-amber-50/80 text-amber-800 border-amber-200/80 hover:bg-amber-100"
                                 }`}
                               >

@@ -57,9 +57,10 @@ type Props = {
     languages: string[];
     isVisible: boolean;
   } | null;
+  categories?: { id: string; name: string; slug: string }[];
 };
 
-export function ProfileForms({ user, student, teacher }: Props) {
+export function ProfileForms({ user, student, teacher, categories }: Props) {
   const [profileState, profileAction] = useActionState(updateProfile, initial);
   const [studentState, studentAction] = useActionState(updateStudentProfile, initial);
   const [teacherState, teacherAction] = useActionState(updateTeacherProfile, initial);
@@ -557,7 +558,10 @@ export function ProfileForms({ user, student, teacher }: Props) {
                 defaultValue={student?.currentClass}
               />
             </div>
-            <StudentTagInput initialTags={student?.tags ?? []} />
+            <StudentTagInput
+              initialTags={student?.tags ?? []}
+              categorySuggestions={categories?.map((c) => c.name)}
+            />
             <p className="text-sm text-slate-500">
               Institute-specific courses and batches are read-only here. Manage them
               at the institute.

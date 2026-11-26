@@ -4,47 +4,54 @@ import { ProfileForms } from "@/app/(app)/settings/profile/ProfileForms";
 
 export default async function ProfileSettingsPage() {
   const session = await requireAuth();
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { id: session.user.id },
-    select: {
-      name: true,
-      username: true,
-      phone: true,
-      phoneVerified: true,
-      image: true,
-      coverImage: true,
-      studentProfile: {
-        select: {
-          headline: true,
-          bio: true,
-          targetExam: true,
-          currentClass: true,
-          tags: true,
-          isVisible: true,
+  const [user, categories] = await Promise.all([
+    prisma.user.findUniqueOrThrow({
+      where: { id: session.user.id },
+      select: {
+        name: true,
+        username: true,
+        phone: true,
+        phoneVerified: true,
+        image: true,
+        coverImage: true,
+        studentProfile: {
+          select: {
+            headline: true,
+            bio: true,
+            targetExam: true,
+            currentClass: true,
+            tags: true,
+            isVisible: true,
+          },
+        },
+        teacherProfile: {
+          select: {
+            headline: true,
+            bio: true,
+            qualification: true,
+            experience: true,
+            subjects: true,
+            languages: true,
+            isVisible: true,
+          },
+        },
+        memberships: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            role: true,
+            status: true,
+            institute: { select: { name: true, slug: true } },
+          },
         },
       },
-      teacherProfile: {
-        select: {
-          headline: true,
-          bio: true,
-          qualification: true,
-          experience: true,
-          subjects: true,
-          languages: true,
-          isVisible: true,
-        },
-      },
-      memberships: {
-        where: { isActive: true },
-        select: {
-          id: true,
-          role: true,
-          status: true,
-          institute: { select: { name: true, slug: true } },
-        },
-      },
-    },
-  });
+    }),
+    prisma.category.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, slug: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <div>
@@ -57,6 +64,7 @@ export default async function ProfileSettingsPage() {
           user={user}
           student={user.studentProfile}
           teacher={user.teacherProfile}
+          categories={categories}
         />
       </div>
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -66,7 +74,7 @@ export default async function ProfileSettingsPage() {
           institute.
         </p>
         <div className="mt-4 space-y-2">
-          {user.memberships.map((membership: any) => (
+          {user.memberships.map((membership) => (
             <div
               key={membership.id}
               className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm"

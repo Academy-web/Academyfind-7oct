@@ -6,6 +6,7 @@ import { Tag, Plus, X, Sparkles } from "lucide-react";
 interface StudentTagInputProps {
   initialTags?: string[];
   name?: string;
+  categorySuggestions?: string[];
 }
 
 export const POPULAR_STUDENT_TAGS = [
@@ -32,9 +33,14 @@ export const POPULAR_STUDENT_TAGS = [
 export function StudentTagInput({
   initialTags = [],
   name = "tags",
+  categorySuggestions = [],
 }: StudentTagInputProps) {
   const [tags, setTags] = useState<string[]>(initialTags);
   const [inputVal, setInputVal] = useState("");
+
+  const allAvailableSuggestions = Array.from(
+    new Set([...categorySuggestions, ...POPULAR_STUDENT_TAGS])
+  );
 
   const addTag = (rawTag: string) => {
     const cleaned = rawTag.trim().replace(/^#+/, "");
@@ -103,16 +109,22 @@ export function StudentTagInput({
         <div className="flex-1 min-w-[140px] flex items-center gap-1">
           <input
             type="text"
+            list="student-tags-input-datalist"
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={
               tags.length === 0
-                ? "Type a tag (e.g. Guitar, UPSC) and press Enter..."
-                : "Add another tag..."
+                ? "Type a category or tag (e.g. Guitar, UPSC) and press Enter..."
+                : "Add another category / tag..."
             }
             className="w-full bg-transparent border-none outline-none text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 px-1 py-1"
           />
+          <datalist id="student-tags-input-datalist">
+            {allAvailableSuggestions.map((s) => (
+              <option key={s} value={s} />
+            ))}
+          </datalist>
           {inputVal.trim() && (
             <button
               type="button"
@@ -125,16 +137,16 @@ export function StudentTagInput({
         </div>
       </div>
 
-      {/* Quick Suggestions */}
+      {/* Quick Suggestions from Categories */}
       <div className="pt-1">
         <div className="flex items-center gap-1.5 mb-2">
           <Sparkles className="w-3 h-3 text-amber-500" />
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            Popular Coaching & Interest Presets
+            Popular Coaching Categories & Interests
           </span>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {POPULAR_STUDENT_TAGS.map((preset) => {
+          {allAvailableSuggestions.slice(0, 16).map((preset) => {
             const isSelected = tags.some(
               (t) => t.toLowerCase() === preset.toLowerCase()
             );

@@ -4,10 +4,11 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { AdminStudentDirectoryClient } from "./AdminStudentDirectoryClient";
+import { POPULAR_STUDENT_TAGS } from "@/components/student/StudentTagInput";
 
 export const metadata = {
   title: "Students & Interest Tags | Admin Center | AcademyFind",
-  description: "Search, filter, and outreach students by their learning interest tags and exams.",
+  description: "Search, filter, and outreach students by their learning interest tags, coaching categories, and exams.",
 };
 
 export default async function AdminStudentsPage({
@@ -28,14 +29,37 @@ export default async function AdminStudentsPage({
   const limit = 30;
   const search = typeof params.search === "string" ? params.search.trim() : "";
   const tag = typeof params.tag === "string" ? params.tag.trim() : "";
+  const category = typeof params.category === "string" ? params.category.trim() : "";
   const city = typeof params.city === "string" ? params.city.trim() : "";
   const exam = typeof params.exam === "string" ? params.exam.trim() : "";
+  const activeCategoryOrTag = category || tag;
 
   // Build Prisma Where query for StudentProfile
   const where: Prisma.StudentProfileWhereInput = {};
 
-  if (tag) {
-    where.tags = { has: tag };
+  if (activeCategoryOrTag) {
+    const lower = activeCategoryOrTag.toLowerCase();
+    const matchedPresets = POPULAR_STUDENT_TAGS.filter((pt) =>
+      pt.toLowerCase().includes(lower) || lower.includes(pt.toLowerCase())
+    );
+    const candidateTags = Array.from(new Set([activeCategoryOrTag, ...matchedPresets]));
+
+    where.OR = [
+      { tags: { hasSome: candidateTags } },
+      {
+        user: {
+          preference: {
+            preferredCategories: {
+              some: {
+                category: {
+                  name: { in: candidateTags, mode: "insensitive" },
+                },
+              },
+            },
+          },
+        },
+      },
+    ];
   }
 
   if (city) {
@@ -47,17 +71,24 @@ export default async function AdminStudentsPage({
   }
 
   if (search) {
-    where.OR = [
+    const searchConditions: Prisma.StudentProfileWhereInput[] = [
       { user: { name: { contains: search, mode: "insensitive" } } },
       { user: { email: { contains: search, mode: "insensitive" } } },
       { user: { phone: { contains: search, mode: "insensitive" } } },
       { headline: { contains: search, mode: "insensitive" } },
       { bio: { contains: search, mode: "insensitive" } },
     ];
+
+    if (where.OR) {
+      where.AND = [{ OR: where.OR }, { OR: searchConditions }];
+      delete where.OR;
+    } else {
+      where.OR = searchConditions;
+    }
   }
 
-  // Parallel data fetching for stats and listing
-  const [totalStudents, taggedStudentsCount, students, allTaggedProfiles] = await Promise.all([
+  // Parallel data fetching for stats, categories, and listing
+  const [totalStudents, taggedStudentsCount, students, allTaggedProfiles, categories] = await Promise.all([
     prisma.studentProfile.count(),
     prisma.studentProfile.count({
       where: {
@@ -90,6 +121,11 @@ export default async function AdminStudentsPage({
       select: { tags: true, city: true, targetExam: true },
       take: 500,
     }),
+    prisma.category.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, slug: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   // Aggregate top tags and unique filter lists
@@ -114,7 +150,7 @@ export default async function AdminStudentsPage({
   const availableExams = Array.from(examsSet).sort();
 
   const totalPages = Math.ceil(
-    (tag || city || exam || search
+    (activeCategoryOrTag || city || exam || search
       ? await prisma.studentProfile.count({ where })
       : totalStudents) / limit
   );
@@ -131,9 +167,11 @@ export default async function AdminStudentsPage({
       topTags={topTags}
       availableCities={availableCities}
       availableExams={availableExams}
+      categories={categories}
       currentFilters={{
         search,
         tag,
+        category,
         city,
         exam,
       }}

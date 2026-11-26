@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma"
 import { Users as UsersIcon, Mail, Phone, Calendar, ArrowRight, Tag, GraduationCap, X } from "lucide-react" // ArrowRight add kiya
-import { format } from "date-fns";
 import { formatIST } from "@/lib/utils";
 import { RoleSelect, UserStatusToggle, AdminMessageUserButton } from "@/components/admin/AdminUserClientControl" 
 import UserFilters from "@/components/admin/AdminUserFilters"
@@ -11,6 +10,7 @@ import Link from "next/link"
 import AdminDeleteButton from "@/components/admin/AdminDeleteButton"
 import { deleteUserAction } from "./actions"
 import { POPULAR_STUDENT_TAGS } from "@/components/student/StudentTagInput"
+import type { Prisma } from "@/app/generated/prisma/client"
 
 export default async function AdminUsersPage({
     searchParams
@@ -24,34 +24,58 @@ export default async function AdminUsersPage({
     const search = typeof params.search === 'string' ? params.search : '';
     const role = typeof params.role === 'string' ? params.role : '';
     const tag = typeof params.tag === 'string' ? params.tag.trim() : '';
+    const category = typeof params.category === 'string' ? params.category.trim() : '';
+    const activeCategoryOrTag = category || tag;
 
     // 2. Build Prisma Where Condition dynamically
-    const whereCondition: any = {};
+    const andConditions: Prisma.UserWhereInput[] = [];
 
     if (search) {
-        whereCondition.OR = [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } }
-        ];
+        andConditions.push({
+            OR: [
+                { name: { contains: search, mode: 'insensitive' } },
+                { email: { contains: search, mode: 'insensitive' } }
+            ]
+        });
     }
     
     if (role) {
-        whereCondition.role = role as any; 
+        andConditions.push({ role: role as Prisma.EnumRoleFilter["equals"] });
     }
 
-    if (tag) {
-        const lower = tag.toLowerCase();
+    if (activeCategoryOrTag) {
+        const lower = activeCategoryOrTag.toLowerCase();
         const matchedPresets = POPULAR_STUDENT_TAGS.filter(pt => 
             pt.toLowerCase().includes(lower) || lower.includes(pt.toLowerCase())
         );
-        const candidateTags = Array.from(new Set([tag, ...matchedPresets]));
-        whereCondition.studentProfile = {
-            tags: { hasSome: candidateTags }
-        };
+        const candidateTags = Array.from(new Set([activeCategoryOrTag, ...matchedPresets]));
+
+        andConditions.push({
+            OR: [
+                {
+                    studentProfile: {
+                        tags: { hasSome: candidateTags }
+                    }
+                },
+                {
+                    preference: {
+                        preferredCategories: {
+                            some: {
+                                category: {
+                                    name: { in: candidateTags, mode: 'insensitive' }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        });
     }
 
+    const whereCondition: Prisma.UserWhereInput = andConditions.length > 0 ? { AND: andConditions } : {};
+
     // 3. Execute Parallel Queries
-    const [totalUsers, users] = await Promise.all([
+    const [totalUsers, users, categories] = await Promise.all([
         prisma.user.count({ where: whereCondition }),
         prisma.user.findMany({
             where: whereCondition,
@@ -63,6 +87,11 @@ export default async function AdminUsersPage({
                     select: { tags: true }
                 }
             }
+        }),
+        prisma.category.findMany({
+            where: { isActive: true },
+            select: { id: true, name: true, slug: true },
+            orderBy: { name: 'asc' },
         })
     ]);
 
@@ -78,9 +107,9 @@ export default async function AdminUsersPage({
                     </h1>
                     <p className="text-slate-500 mt-1 flex items-center flex-wrap gap-2">
                         <span>Found {totalUsers} matching users.</span>
-                        {tag && (
+                        {activeCategoryOrTag && (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200">
-                                <Tag className="w-3 h-3 text-amber-600" /> Filtered by Tag: #{tag}
+                                <Tag className="w-3 h-3 text-amber-600" /> Filtered by Category / Tag: #{activeCategoryOrTag}
                                 <Link href="/af-ass-manage/users" className="hover:text-amber-950 p-0.5 rounded-full hover:bg-amber-100 transition-colors">
                                     <X className="w-3 h-3" />
                                 </Link>
@@ -99,7 +128,7 @@ export default async function AdminUsersPage({
                 </div>
             </div>
 
-            <UserFilters />
+            <UserFilters categories={categories} />
 
             {/* Users Table */}
             <div className="bg-white border border-slate-200 rounded-t-2xl shadow-sm overflow-hidden">
