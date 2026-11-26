@@ -1,3 +1,5 @@
+import { buildInstituteRequestWhatsAppMessage } from "@/lib/institutes/instituteRequestLinks";
+
 export function getProductionBaseUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (envUrl && !envUrl.includes("localhost")) {
@@ -53,38 +55,23 @@ export function buildApprovalLinks(claim: ClaimLinkInput) {
     ? `${baseUrl}/institute/${instituteId}-${slug}`
     : `${baseUrl}/institute/${instituteId}`;
   const managerDashboardUrl = `${baseUrl}/manager/${instituteId}`;
+  const freeTrialUrl = `${baseUrl}/manager/${instituteId}/subscription`;
 
-  return { publicListingUrl, managerDashboardUrl, baseUrl };
+  return { publicListingUrl, managerDashboardUrl, freeTrialUrl, baseUrl };
 }
 
 export function buildApprovalWhatsAppMessage(claim: ClaimLinkInput): string {
-  const { publicListingUrl, managerDashboardUrl } = buildApprovalLinks(claim);
+  const { publicListingUrl, managerDashboardUrl, freeTrialUrl } = buildApprovalLinks(claim);
   const managerName = claim.fullName || claim.user?.name || "Manager";
   const instituteName = claim.institute?.name || "Your Institute";
 
-  return `🎉 *Congratulations ${managerName}!*
-
-We are pleased to inform you that your claim request for *${instituteName}* has been officially verified & *APPROVED* on AcademyFind!
-
-You now have full manager access to your profile:
-
-🌐 *View Your Public Listing:*
-${publicListingUrl}
-
-📊 *Access Manager Dashboard:*
-${managerDashboardUrl}
-
-*What you can do in your dashboard:*
-✅ Update institute info, courses, & fee structure
-✅ Add batches, facilities & gallery photos
-✅ View student enquiry leads & callbacks
-✅ Respond to student reviews
-
-If you need any assistance, feel free to reply directly to this message.
-
-Best Regards,
-*Team AcademyFind*
-🌐 www.academyfind.com`;
+  return buildInstituteRequestWhatsAppMessage({
+    managerName,
+    instituteName,
+    publicListingUrl,
+    managerDashboardUrl,
+    freeTrialUrl,
+  });
 }
 
 export function buildApprovalWhatsAppUrl(claim: ClaimLinkInput): string {

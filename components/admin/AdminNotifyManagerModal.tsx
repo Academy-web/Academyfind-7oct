@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { formatWhatsAppNumber } from "@/lib/institutes/claimLinks";
+import { buildInstituteRequestWhatsAppMessage } from "@/lib/institutes/instituteRequestLinks";
 
 export interface NotifyManagerData {
   title?: string;
@@ -107,25 +108,12 @@ export function AdminNotifyManagerModal() {
   // Resolved WhatsApp Message
   const resolvedMessage =
     data.waMessage ||
-    `🎉 *Congratulations ${managerName}!*
-
-We are pleased to inform you that your request for *${instituteName}* has been officially verified & *APPROVED* on AcademyFind!
-
-You now have full manager access to your profile:
-
-${publicListingUrl ? `🌐 *View Your Public Listing:*\n${publicListingUrl}\n\n` : ""}${
-      managerDashboardUrl ? `📊 *Access Manager Dashboard:*\n${managerDashboardUrl}\n\n` : ""
-    }*What you can do in your dashboard:*
-✅ Update institute info, courses, & fee structure
-✅ Add batches, facilities & gallery photos
-✅ View student enquiry leads & callbacks
-✅ Respond to student reviews
-
-If you need any assistance, feel free to reply directly to this message.
-
-Best Regards,
-*Team AcademyFind*
-🌐 www.academyfind.com`;
+    buildInstituteRequestWhatsAppMessage({
+      managerName,
+      instituteName,
+      publicListingUrl,
+      managerDashboardUrl,
+    });
 
   // Resolved WhatsApp URL
   const resolvedWaUrl =
