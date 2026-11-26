@@ -14,10 +14,12 @@ export function buildApprovalWithTrialEmailHtml(params: {
   instituteName: string;
   publicListingUrl: string;
   managerDashboardUrl: string;
+  freeTrialUrl?: string;
 }): string {
   const name = escapeHtml(params.instituteName);
   const publicUrl = escapeHtml(params.publicListingUrl);
   const managerUrl = escapeHtml(params.managerDashboardUrl);
+  const trialUrl = escapeHtml(params.freeTrialUrl || params.managerDashboardUrl);
 
   return `
   <div style="font-family: Arial, Helvetica, sans-serif; max-width: 640px; margin: 0 auto; color: #1e293b; line-height: 1.65; background-color: #ffffff; padding: 24px;">
@@ -131,7 +133,7 @@ export function buildApprovalWithTrialEmailHtml(params: {
         </ul>
         <p style="margin: 0 0 16px 0; color: #78350f;">Simply log in to your <strong>Manager Dashboard</strong>, locate the free subscription offer and activate your 7-day trial.</p>
         <div style="text-align: center;">
-          <a href="${managerUrl}" style="display: inline-block; background-color: #d97706; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px;">Go to Manager Dashboard &amp; Activate Trial</a>
+          <a href="${trialUrl}" style="display: inline-block; background-color: #d97706; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px;">Activate Your 7-Day Free Trial</a>
         </div>
       </div>
 

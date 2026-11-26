@@ -21,6 +21,7 @@ export async function sendInstituteRequestApprovalEmail(params: {
     instituteName: string;
     publicListingUrl: string;
     managerDashboardUrl: string;
+    freeTrialUrl?: string;
 }) {
     try {
         const { APPROVAL_WITH_TRIAL_SUBJECT, buildApprovalWithTrialEmailHtml } = await import("@/lib/notifications/trialEmails");
@@ -32,6 +33,7 @@ export async function sendInstituteRequestApprovalEmail(params: {
                 instituteName: params.instituteName,
                 publicListingUrl: params.publicListingUrl,
                 managerDashboardUrl: params.managerDashboardUrl,
+                freeTrialUrl: params.freeTrialUrl,
             }),
         });
         console.log(`Institute Request approval email sent successfully to ${params.toEmail}`);
@@ -145,25 +147,45 @@ export async function approveInstituteRequest(requestId: string) {
         const targetEmail = request.user?.email || request.institute.email;
         const targetPhone = request.ownerPhone || request.user?.phone || request.institute.phone;
 
-        // Send Email to the Manager & register PENDING trial for funnel tracking
+        // Send Email to the Manager & register PENDING trial with tokenized link for funnel tracking
         if (targetEmail) {
+            let freeTrialUrl: string | undefined;
+            let pendingTrialId: string | undefined;
+            try {
+                const { createOrReusePendingTrial, generateTrialToken } = await import("@/lib/subscription/trial");
+                const { rawToken, tokenHash } = generateTrialToken();
+                const tokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                const pendingRes = await createOrReusePendingTrial({
+                    instituteId: request.instituteId,
+                    source: "NEW_REQUEST",
+                    recipientEmail: targetEmail,
+                    tokenHash,
+                    tokenExpiresAt,
+                    markEmailSent: false,
+                });
+                if (pendingRes.success && pendingRes.trial) {
+                    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.academyfind.com";
+                    freeTrialUrl = `${baseUrl}/api/trial/open?token=${rawToken}`;
+                    pendingTrialId = pendingRes.trial.id;
+                }
+            } catch (trialErr) {
+                console.error("Failed to create pending trial on institute approval:", trialErr);
+            }
+
             await sendInstituteRequestApprovalEmail({
                 toEmail: targetEmail,
                 managerName,
                 instituteName,
                 publicListingUrl,
                 managerDashboardUrl,
+                freeTrialUrl,
             });
-            try {
-                const { createOrReusePendingTrial } = await import("@/lib/subscription/trial");
-                await createOrReusePendingTrial({
-                    instituteId: request.instituteId,
-                    source: "NEW_REQUEST",
-                    recipientEmail: targetEmail,
-                    markEmailSent: true,
-                });
-            } catch (trialErr) {
-                console.error("Failed to create pending trial on institute approval:", trialErr);
+
+            if (pendingTrialId) {
+                await prisma.instituteTrial.update({
+                    where: { id: pendingTrialId },
+                    data: { emailSentAt: new Date() },
+                }).catch(() => {});
             }
         }
 

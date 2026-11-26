@@ -119,15 +119,30 @@ export async function updateClaimStatus(claimId: string, status: "APPROVED" | "R
                 });
             }
 
-            // Send Email to the new Manager & register PENDING trial for funnel tracking
+            // Send Email to the new Manager & register PENDING trial with tokenized link for funnel tracking
             if (claim.user?.email) {
                 try {
                     const { APPROVAL_WITH_TRIAL_SUBJECT, buildApprovalWithTrialEmailHtml } = await import("@/lib/notifications/trialEmails");
-                    const { createOrReusePendingTrial } = await import("@/lib/subscription/trial");
+                    const { createOrReusePendingTrial, generateTrialToken } = await import("@/lib/subscription/trial");
 
                     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.academyfind.com";
                     const publicUrl = `${siteUrl}/institute/${claim.institute.id}-${claim.institute.slug || claim.institute.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
                     const managerUrl = `${siteUrl}/manager/${claim.institute.id}`;
+
+                    const { rawToken, tokenHash } = generateTrialToken();
+                    const tokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                    const pendingRes = await createOrReusePendingTrial({
+                        instituteId: claim.instituteId,
+                        source: "NEW_CLAIM",
+                        recipientEmail: claim.user.email,
+                        tokenHash,
+                        tokenExpiresAt,
+                        markEmailSent: false,
+                    });
+
+                    const freeTrialUrl = pendingRes.success
+                        ? `${siteUrl}/api/trial/open?token=${rawToken}`
+                        : `${managerUrl}/subscription`;
 
                     await resend.emails.send({
                         from: "AcademyFind <no-reply@academyfind.com>",
@@ -137,15 +152,16 @@ export async function updateClaimStatus(claimId: string, status: "APPROVED" | "R
                             instituteName: claim.institute.name,
                             publicListingUrl: publicUrl,
                             managerDashboardUrl: managerUrl,
+                            freeTrialUrl,
                         }),
                     });
 
-                    await createOrReusePendingTrial({
-                        instituteId: claim.instituteId,
-                        source: "NEW_CLAIM",
-                        recipientEmail: claim.user.email,
-                        markEmailSent: true,
-                    });
+                    if (pendingRes.success && pendingRes.trial) {
+                        await prisma.instituteTrial.update({
+                            where: { id: pendingRes.trial.id },
+                            data: { emailSentAt: new Date() },
+                        });
+                    }
 
                     console.log(`Claim approval email sent to ${claim.user.email}`);
                 } catch (emailError) {
