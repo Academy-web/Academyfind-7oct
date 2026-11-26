@@ -4,7 +4,7 @@ import { ArrowRight, Clock3, Sparkles } from "lucide-react";
 import SearchBar from "./SearchBar";
 import TrendingTopics from "./TrendingTopics";
 
-const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80";
+const DEFAULT_IMAGE = "https://res.cloudinary.com/dlgy4oznm/image/upload/v1787170391/academyfind/blogs/blog-1787170390625-1787170390625.webp";
 
 const formatDate = (dateVal: any) => {
   if (!dateVal) return "Recently";

@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "images.unsplash.com",
+        pathname: "/**",
       },
       {
         protocol: "https",
@@ -44,6 +45,7 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "i.postimg.cc",
+        pathname: "/**",
       },
     ],
   },

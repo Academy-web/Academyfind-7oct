@@ -10,7 +10,7 @@ interface LatestPostsProps {
   posts: any[];
 }
 
-const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80";
+const DEFAULT_IMAGE = "https://res.cloudinary.com/dlgy4oznm/image/upload/v1787170391/academyfind/blogs/blog-1787170390625-1787170390625.webp";
 
 export default function LatestPosts({ posts }: LatestPostsProps) {
   const formatDate = (dateVal: any) => {
@@ -87,6 +87,7 @@ export default function LatestPosts({ posts }: LatestPostsProps) {
                         src={post.coverImage || DEFAULT_IMAGE}
                         alt={post.title}
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-slate-900/10 transition-colors group-hover:bg-transparent" />

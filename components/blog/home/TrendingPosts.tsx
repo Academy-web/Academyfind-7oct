@@ -10,7 +10,7 @@ interface TrendingPostsProps {
   posts: any[];
 }
 
-const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&q=80";
+const DEFAULT_IMAGE = "https://res.cloudinary.com/dlgy4oznm/image/upload/v1787170391/academyfind/blogs/blog-1787170390625-1787170390625.webp";
 
 export default function TrendingPosts({ posts }: TrendingPostsProps) {
   if (!posts || posts.length === 0) {
