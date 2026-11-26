@@ -27,6 +27,33 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
+  const lookup = url.searchParams.get("lookup")?.trim();
+  if (lookup !== undefined && lookup !== null) {
+    if (lookup.length < 2) {
+      return NextResponse.json({ success: true, institutes: [] });
+    }
+    const institutes = await prisma.institute.findMany({
+      where: {
+        OR: [
+          { name: { contains: lookup, mode: "insensitive" } },
+          { id: { equals: lookup } },
+          { email: { contains: lookup, mode: "insensitive" } },
+          { city: { name: { contains: lookup, mode: "insensitive" } } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        subscriptionPlan: true,
+        hasUsedTrial: true,
+        city: { select: { name: true } },
+      },
+      orderBy: { name: "asc" },
+      take: 10,
+    });
+    return NextResponse.json({ success: true, institutes });
+  }
+
   const statusFilter = url.searchParams.get("status") || "ALL";
   const sourceFilter = url.searchParams.get("source") || "ALL";
   const search = url.searchParams.get("q")?.trim() || "";

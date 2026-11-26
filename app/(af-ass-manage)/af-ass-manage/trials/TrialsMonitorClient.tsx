@@ -113,8 +113,48 @@ export default function TrialsMonitorClient() {
 
   const [showGrantModal, setShowGrantModal] = useState(false);
   const [grantInstituteId, setGrantInstituteId] = useState("");
+  const [grantInstituteSearch, setGrantInstituteSearch] = useState("");
+  const [grantSelectedInst, setGrantSelectedInst] = useState<{
+    id: string;
+    name: string;
+    subscriptionPlan: string;
+    hasUsedTrial: boolean;
+    city?: { name: string } | null;
+  } | null>(null);
+  const [grantLookupResults, setGrantLookupResults] = useState<
+    Array<{
+      id: string;
+      name: string;
+      subscriptionPlan: string;
+      hasUsedTrial: boolean;
+      city?: { name: string } | null;
+    }>
+  >([]);
+  const [grantLookupLoading, setGrantLookupLoading] = useState(false);
   const [grantDays, setGrantDays] = useState(7);
   const [grantReason, setGrantReason] = useState("");
+
+  useEffect(() => {
+    if (!showGrantModal || grantSelectedInst) return;
+    const q = grantInstituteSearch.trim();
+    if (q.length < 2) {
+      setGrantLookupResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setGrantLookupLoading(true);
+      try {
+        const res = await fetch(`/api/admin/trials?lookup=${encodeURIComponent(q)}`);
+        const json = await res.json();
+        if (json.success && Array.isArray(json.institutes)) {
+          setGrantLookupResults(json.institutes);
+        }
+      } finally {
+        setGrantLookupLoading(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [grantInstituteSearch, showGrantModal, grantSelectedInst]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -626,13 +666,71 @@ export default function TrialsMonitorClient() {
             <h3 className="font-black text-lg text-slate-900">Admin Grant / Override Trial</h3>
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Institute ID</label>
-                <input
-                  value={grantInstituteId}
-                  onChange={(e) => setGrantInstituteId(e.target.value)}
-                  placeholder="clx..."
-                  className="w-full px-3 py-2 text-sm border rounded-xl"
-                />
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Search Institute (Name, City, Email, or ID)
+                </label>
+                {grantSelectedInst ? (
+                  <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-amber-300 bg-amber-50/70">
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-slate-900 truncate">
+                        {grantSelectedInst.name}
+                      </div>
+                      <div className="text-[11px] text-slate-600">
+                        {grantSelectedInst.city?.name || "—"} • Plan: {grantSelectedInst.subscriptionPlan}
+                        {grantSelectedInst.hasUsedTrial ? " • Used Trial" : " • Trial Eligible"}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGrantSelectedInst(null);
+                        setGrantInstituteId("");
+                        setGrantInstituteSearch("");
+                      }}
+                      className="text-xs font-bold text-amber-800 hover:text-amber-950 px-2 py-1 rounded-lg hover:bg-amber-200/60 cursor-pointer shrink-0"
+                    >
+                      Change
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      value={grantInstituteSearch}
+                      onChange={(e) => setGrantInstituteSearch(e.target.value)}
+                      placeholder="Type at least 2 characters to search..."
+                      className="w-full pl-9 pr-3 py-2 text-sm border rounded-xl"
+                    />
+                    {(grantLookupLoading || grantLookupResults.length > 0 || grantInstituteSearch.trim().length >= 2) && (
+                      <div className="mt-1.5 max-h-48 overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm divide-y divide-slate-100">
+                        {grantLookupLoading ? (
+                          <div className="p-3 text-xs text-slate-500">Searching institutes...</div>
+                        ) : grantLookupResults.length === 0 ? (
+                          <div className="p-3 text-xs text-slate-500">No matching institutes found.</div>
+                        ) : (
+                          grantLookupResults.map((inst) => (
+                            <button
+                              key={inst.id}
+                              type="button"
+                              onClick={() => {
+                                setGrantSelectedInst(inst);
+                                setGrantInstituteId(inst.id);
+                                setGrantLookupResults([]);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-amber-50/70 transition-colors cursor-pointer"
+                            >
+                              <div className="text-xs font-bold text-slate-900">{inst.name}</div>
+                              <div className="text-[11px] text-slate-500">
+                                {inst.city?.name || "—"} • {inst.subscriptionPlan}
+                                {inst.hasUsedTrial ? " • Used Trial" : " • Eligible"}
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Days (1–14)</label>
@@ -660,7 +758,7 @@ export default function TrialsMonitorClient() {
                 Cancel
               </Button>
               <Button
-                disabled={busyAction === "GRANT_OVERRIDE"}
+                disabled={busyAction === "GRANT_OVERRIDE" || !grantInstituteId}
                 onClick={async () => {
                   const ok = await runPostAction(
                     {
@@ -674,6 +772,8 @@ export default function TrialsMonitorClient() {
                   if (ok) {
                     setShowGrantModal(false);
                     setGrantInstituteId("");
+                    setGrantInstituteSearch("");
+                    setGrantSelectedInst(null);
                     setGrantReason("");
                   }
                 }}
