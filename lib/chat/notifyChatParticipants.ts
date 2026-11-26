@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { sendExpoPushNotification } from "@/lib/pushNotifications";
+import { sendEmail } from "@/lib/notifications/email";
+import {
+  buildNewMessageEmailHtml,
+  NEW_MESSAGE_EMAIL_SUBJECT,
+} from "@/lib/notifications/messageEmail";
 
 interface NotifyChatParams {
   conversationId: string;
@@ -12,6 +17,8 @@ interface ChatParticipantItem {
   userId: string;
   user: {
     id: string;
+    email: string | null;
+    name: string | null;
     pushToken: string | null;
   } | null;
 }
@@ -63,6 +70,8 @@ export async function notifyChatParticipants({
         user: {
           select: {
             id: true,
+            email: true,
+            name: true,
             pushToken: true,
           },
         },
@@ -136,6 +145,34 @@ export async function notifyChatParticipants({
         }).catch((pushErr) => console.error("Chat push notification error:", pushErr));
       }
     }
+
+    // 6. Send Auto Email Notifications to participants with an email address
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://academyfind.com").replace(/\/+$/, "");
+    const chatUrl = `${baseUrl}/chat/${conversationId}`;
+    const conversationLabel =
+      conversation.type === "DIRECT"
+        ? null
+        : conversation.title ||
+          conversation.batch?.name ||
+          conversation.institute?.name ||
+          null;
+
+    await Promise.allSettled(
+      participants
+        .filter((p) => Boolean(p.user?.email))
+        .map((p) => {
+          const html = buildNewMessageEmailHtml({
+            recipientName: p.user?.name,
+            senderName,
+            conversationLabel,
+            messagePreview: body,
+            chatUrl,
+          });
+          return sendEmail(p.user!.email!, NEW_MESSAGE_EMAIL_SUBJECT, html).catch(
+            (emailErr) => console.error("Chat email notification error:", emailErr)
+          );
+        })
+    );
   } catch (error) {
     console.error("notifyChatParticipants unexpected error:", error);
   }

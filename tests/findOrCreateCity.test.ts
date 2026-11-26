@@ -43,13 +43,13 @@ jest.mock("@/lib/rate-limit", () => ({
 describe("findOrCreateCity", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (auth.api.getSession as jest.Mock).mockResolvedValue({
+    (auth.api.getSession as unknown as jest.Mock).mockResolvedValue({
       user: { id: "user-1" },
     });
   });
 
   it("rejects unauthenticated callers", async () => {
-    (auth.api.getSession as jest.Mock).mockResolvedValueOnce(null);
+    (auth.api.getSession as unknown as jest.Mock).mockResolvedValueOnce(null);
 
     const res = await findOrCreateCity({ name: "Kota", state: "Rajasthan" });
 
