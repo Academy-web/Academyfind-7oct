@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { UploadCloud, MapPin, Landmark, CheckCircle, Globe, User, Plus, X, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import LocationAutocomplete from "../search/LocationAutoComplete";
+import CityAutoComplete, { SelectedCity } from "../search/CityAutoComplete";
 import { addInstitute } from "@/lib/User/user/create-institute";
 
 
@@ -34,6 +35,7 @@ export default function CreateInstituteForm({
     const [imagePreview, setImagePreview] = useState<string>("");
 
     // Location State
+    const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
     const [location, setLocation] = useState({ lat: 0, lng: 0, address: "" });
 
     // Category Search State (for better UX)
@@ -71,6 +73,11 @@ export default function CreateInstituteForm({
 
     const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!selectedCity?.id) {
+            toast.error("Please search and select your city.");
+            return;
+        }
 
         if (selectedCategories.length === 0) {
             toast.error("Please select at least one core category.");
@@ -335,10 +342,11 @@ export default function CreateInstituteForm({
                             <label className="text-xs font-bold text-slate-600 uppercase tracking-wide">
                                 {providerType === "INDIVIDUAL" ? "Your City *" : "Base City *"}
                             </label>
-                            <select name="cityId" required className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-700 outline-none focus:ring-2 focus:ring-amber-400 appearance-none">
-                                <option value="">Select your city...</option>
-                                {allCities.map((c: { id: string; name: string }) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
+                            <input type="hidden" name="cityId" value={selectedCity?.id || ""} />
+                            <CityAutoComplete
+                                selectedCity={selectedCity}
+                                onCitySelect={setSelectedCity}
+                            />
                         </div>
                         <div className="space-y-2.5">
                             <label className="text-xs font-bold text-slate-600 uppercase tracking-wide">

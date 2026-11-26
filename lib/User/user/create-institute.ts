@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { v2 as cloudinary } from "cloudinary"
 import { revalidatePath } from "next/cache";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { auth } from "@/lib/auth/auth";
+import { headers } from "next/headers";
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -10,7 +12,103 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 function generateSlug(name: string) {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+}
+
+export async function findOrCreateCity(input: {
+    name: string;
+    state: string;
+    country?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+}) {
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
+
+        if (!session?.user) {
+            return { success: false as const, error: "Please sign in to select a city." };
+        }
+
+        const name = input.name?.trim();
+        const state = input.state?.trim() || "India";
+        const country = input.country?.trim() || "India";
+
+        if (!name || name.length > 100) {
+            return { success: false as const, error: "Valid city name is required." };
+        }
+
+        // 1. Check if city already exists with same name & state (case-insensitive)
+        const existingByNameAndState = await prisma.city.findFirst({
+            where: {
+                name: { equals: name, mode: "insensitive" },
+                state: { equals: state, mode: "insensitive" },
+            },
+            select: { id: true, name: true, slug: true, state: true },
+        });
+
+        if (existingByNameAndState) {
+            return { success: true as const, city: existingByNameAndState, created: false };
+        }
+
+        // 2. Check if slug already exists
+        const baseSlug = generateSlug(name) || `city-${Date.now()}`;
+        const existingBySlug = await prisma.city.findUnique({
+            where: { slug: baseSlug },
+            select: { id: true, name: true, slug: true, state: true },
+        });
+
+        if (
+            existingBySlug &&
+            existingBySlug.state.toLowerCase() === state.toLowerCase()
+        ) {
+            return { success: true as const, city: existingBySlug, created: false };
+        }
+
+        // 3. Ensure unique slug if another state already uses baseSlug
+        let slug = baseSlug;
+        if (existingBySlug) {
+            const stateSlug = generateSlug(state);
+            slug = stateSlug ? `${baseSlug}-${stateSlug}` : `${baseSlug}-1`;
+            let collision = await prisma.city.findUnique({ where: { slug } });
+            let counter = 1;
+            while (collision) {
+                slug = `${baseSlug}-${counter}`;
+                collision = await prisma.city.findUnique({ where: { slug } });
+                counter++;
+            }
+        }
+
+        const latitude =
+            typeof input.latitude === "number" && !Number.isNaN(input.latitude)
+                ? input.latitude
+                : null;
+        const longitude =
+            typeof input.longitude === "number" && !Number.isNaN(input.longitude)
+                ? input.longitude
+                : null;
+
+        const newCity = await prisma.city.create({
+            data: {
+                name,
+                slug,
+                state,
+                country,
+                latitude,
+                longitude,
+            },
+            select: { id: true, name: true, slug: true, state: true },
+        });
+
+        revalidatePath("/user/create-institute");
+        revalidatePath("/cities");
+
+        return { success: true as const, city: newCity, created: true };
+    } catch (error) {
+        console.error("findOrCreateCity Error:", error);
+        return { success: false as const, error: "Failed to save selected city." };
+    }
 }
 
 async function uploadImageToCloudinary(file: File, folderName: string, idPrefix: string) {
