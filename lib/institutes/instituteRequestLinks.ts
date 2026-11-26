@@ -20,7 +20,8 @@ export function buildInstituteRequestLinks(institute: { id: string; name?: strin
   const slug = rawSlug.replace(/^-+|-+$/g, "");
   const publicListingUrl = slug ? `${baseUrl}/institute/${instituteId}-${slug}` : `${baseUrl}/institute/${instituteId}`;
   const managerDashboardUrl = `${baseUrl}/manager/${instituteId}`;
-  return { publicListingUrl, managerDashboardUrl, baseUrl };
+  const freeTrialUrl = `${baseUrl}/manager/${instituteId}/subscription`;
+  return { publicListingUrl, managerDashboardUrl, freeTrialUrl, baseUrl };
 }
 
 export function buildInstituteRequestWhatsAppMessage(params: {
@@ -28,30 +29,62 @@ export function buildInstituteRequestWhatsAppMessage(params: {
   instituteName: string;
   publicListingUrl: string;
   managerDashboardUrl: string;
+  freeTrialUrl?: string;
 }): string {
-  return `🎉 *Congratulations ${params.managerName}!*
+  const trialLink = params.freeTrialUrl || `${params.managerDashboardUrl.replace(/\/$/, "")}/subscription`;
 
-We are pleased to inform you that your listing request for *${params.instituteName}* has been officially verified & *APPROVED* on AcademyFind!
+  return `Hello ${params.instituteName}! 👋
 
-You now have full manager access to your profile:
+Congratulations! Your institute has been successfully approved and is now live on *AcademyFind*.
 
-🌐 *View Your Public Listing:*
+🎓 *Your Institute Profile:*
 ${params.publicListingUrl}
 
-📊 *Access Manager Dashboard:*
+🔐 *Manager Dashboard Login:*
 ${params.managerDashboardUrl}
 
-*What you can do in your dashboard:*
-✅ Update institute info, courses, & fee structure
-✅ Add batches, facilities & gallery photos
-✅ View student enquiry leads & callbacks
-✅ Respond to student reviews
+With AcademyFind, you can do much more than just create an online listing!
 
-If you need any assistance, feel free to reply directly to this message.
+Here are some key features you can explore:
 
-Best Regards,
+✅ *Online Visibility:* Help students discover your institute through category, location-based searches and get countless leads.
+
+✅ *Professional Profile:* Showcase your courses, batches, faculty, facilities, photos, achievements and results.
+
+✅ *CRM & Enquiry Management:* Organise student enquiries, track leads, maintain enquiry history and manage follow-ups.
+
+✅ *Student Connections:* Connect with prospective students and build meaningful relationships.
+
+✅ *Reviews & Ratings:* Build credibility through student feedback.
+
+✅ *Notice Board & Promotions:* Share admissions, new batches, offers and important announcements.
+
+✅ *Community Features:* Engage with students and teachers through groups, forums and discussions.
+
+✅ *Analytics & Enhanced Visibility:* Explore additional tools and promotional opportunities available through your subscription.
+
+🎁 *EXCITING: Your 7-Day Free Trial!*
+
+You can explore our one-week free subscription trial:
+
+• No payment required.
+• No credit/debit card details required.
+• Available to institutes on the Basic plan.
+• Activate it anytime from your Manager Dashboard.
+
+👉 *Activate Your 7-Day Free Trial Here:*
+${trialLink}
+
+Simply log in to your Manager Dashboard, find the free subscription offer and activate your trial!
+
+We encourage you to complete your institute profile and explore the platform to make the most of AcademyFind.
+
+*Great education deserves to be discovered. Let students discover you!*
+
+Warm regards,
 *Team AcademyFind*
-🌐 www.academyfind.com`;
+🌐 www.academyfind.com
+📞 9045699938`;
 }
 
 export function formatWhatsAppNumber(phone?: string | null): string {
@@ -72,6 +105,7 @@ export function buildInstituteRequestWhatsAppUrl(params: {
   instituteName: string;
   publicListingUrl: string;
   managerDashboardUrl: string;
+  freeTrialUrl?: string;
 }): string {
   const waPhone = formatWhatsAppNumber(params.phone);
   if (!waPhone) return "";
