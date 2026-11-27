@@ -11,9 +11,7 @@ import { AuthPromptModal } from "@/components/layout/auth-prompt-model";
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
-import dynamic from "next/dynamic";
-
-const NextTopLoader = dynamic(() => import("nextjs-toploader"), { ssr: false });
+import TopLoader from "@/components/layout/TopLoader";
 import AppToaster from "@/components/ui/AppToaster";
 import { GoogleOneTap } from "@/components/layout/GoogleOneTap";
 import GlobalCallbackFAB from "@/components/User/GlobalCallBack";
@@ -132,7 +130,7 @@ export default async function RootLayout({
 
         {/* <CursorGlow /> */}
         <GoogleMapsProvider>
-          <NextTopLoader color="#f59e0b" showSpinner={false} />
+          <TopLoader />
           <PhoneNudgeBanner />
 
           <main className="flex-1">
