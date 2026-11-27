@@ -88,7 +88,7 @@ export async function verifyFirebaseIdToken(idToken: string): Promise<DecodedFir
   const projectId =
     process.env.FIREBASE_PROJECT_ID ||
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-    "academyfind-1725e";
+    "academyfind-206ce";
 
   try {
     const JWKS = getJWKS();

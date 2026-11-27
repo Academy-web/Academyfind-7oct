@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import * as jose from 'jose';
 
-const FIREBASE_PROJECT_NUMBER = '561439451313'; // From google-services.json
+const FIREBASE_PROJECT_NUMBER = '820161441990';
 const JWKS_URL = 'https://firebaseappcheck.googleapis.com/v1/jwks';
 
 export async function middleware(request: NextRequest) {
