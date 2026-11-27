@@ -15,7 +15,6 @@
     "@ai-sdk/groq": "^4.0.31",
     "@ai-sdk/openai": "^3.0.73",
     "@ai-sdk/react": "^4.0.80",
-    "@better-auth/cli": "^1.4.21",
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.0",
     "@capacitor/push-notifications": "^8.1.2",
