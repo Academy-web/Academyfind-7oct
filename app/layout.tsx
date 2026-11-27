@@ -11,7 +11,9 @@ import { AuthPromptModal } from "@/components/layout/auth-prompt-model";
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
-import NextTopLoader from 'nextjs-toploader'
+import dynamic from "next/dynamic";
+
+const NextTopLoader = dynamic(() => import("nextjs-toploader"), { ssr: false });
 import AppToaster from "@/components/ui/AppToaster";
 import { GoogleOneTap } from "@/components/layout/GoogleOneTap";
 import GlobalCallbackFAB from "@/components/User/GlobalCallBack";
