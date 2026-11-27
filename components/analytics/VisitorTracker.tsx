@@ -1,9 +1,21 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 export default function VisitorTracker() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return <VisitorTrackerInner />;
+}
+
+function VisitorTrackerInner() {
   const pathname = usePathname();
   const trackedPages = useRef<Set<string>>(new Set());
 
@@ -43,14 +55,12 @@ export default function VisitorTracker() {
             pageUrl: pathname,
           }),
         });
-      } catch (error) {
-        console.error('Failed to track visitor page view', error);
+      } catch (err) {
+        // Fail silently so user experience is never blocked by metrics
       }
     };
 
-    // Small delay to ensure the page has loaded and other high-priority requests finish
-    const timeout = setTimeout(trackView, 1200);
-    return () => clearTimeout(timeout);
+    trackView();
   }, [pathname]);
 
   return null;

@@ -1,9 +1,21 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { authClient } from "@/lib/auth/auth-client";
 
 export function GoogleOneTap() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return <GoogleOneTapInner />;
+}
+
+function GoogleOneTapInner() {
   const { data: session, isPending } = authClient.useSession();
   const hasTriggeredRef = useRef(false);
 

@@ -4,9 +4,6 @@ const nextConfig: NextConfig = {
   // Prevent Next.js from bundling these — they must use native Node.js require/ESM
   // firebase-admin uses jose (ESM-only) via jwks-rsa — bundling it causes ERR_REQUIRE_ESM on Vercel
   serverExternalPackages: [
-    "better-auth",
-    "better-call",
-    "rou3",
     "firebase-admin",
     "firebase-admin/app",
     "firebase-admin/auth",

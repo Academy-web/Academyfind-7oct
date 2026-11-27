@@ -27,6 +27,7 @@ interface VerificationNudgeResponse {
  * - For blog authors: Nudges to verify phone/email so the AcademyFind team can reach them.
  */
 export default function PhoneNudgeBanner() {
+  const [mounted, setMounted] = useState(false);
   const [nudgeType, setNudgeType] = useState<NudgeType>(null);
   const [dismissed, setDismissed] = useState(false);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
@@ -35,6 +36,11 @@ export default function PhoneNudgeBanner() {
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     let isMounted = true;
 
     async function checkNudgeEligibility() {
@@ -197,7 +203,7 @@ export default function PhoneNudgeBanner() {
         clearTimeout(toastTimeoutRef.current);
       }
     };
-  }, []);
+  }, [mounted]);
 
   const handleDismiss = useCallback(() => {
     setDismissed(true);
@@ -253,6 +259,8 @@ export default function PhoneNudgeBanner() {
       return false;
     }
   }, []);
+
+  if (!mounted) return null;
 
   return (
     <>
