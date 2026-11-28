@@ -21,22 +21,12 @@ export default async function AnalyticsPage() {
     getSearchConsoleData(),
   ]);
 
-  if (gaData.error || gscData.error) {
-    return (
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">Analytics Dashboard</h1>
-        <div className="bg-red-50 text-red-500 p-4 rounded-lg">
-          <p>Failed to load analytics data.</p>
-          {gaData.error && <p>GA4 Error: {gaData.error}</p>}
-          {gscData.error && <p>GSC Error: {gscData.error}</p>}
-        </div>
-      </div>
-    );
-  }
+  // Check for any service errors
+  const hasServiceError = Boolean(gaData.error || gscData.error);
 
   let todayVisitorsCount = 0;
   if (!('error' in gaData) && 'chartData' in gaData && Array.isArray(gaData.chartData) && gaData.chartData.length > 0) {
-    todayVisitorsCount = gaData.chartData[gaData.chartData.length - 1].visitors || 0;
+    todayVisitorsCount = gaData.chartData[gaData.chartData.length - 1]?.visitors || 0;
   }
 
   return (
@@ -47,6 +37,17 @@ export default async function AnalyticsPage() {
           <span className="text-sm text-slate-500">Last 30 Days</span>
         </div>
       </div>
+
+      {hasServiceError && (
+        <div className="bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 p-4 rounded-xl mb-4 text-sm flex flex-col gap-1 shadow-sm">
+          <div className="font-semibold flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            External Analytics Sync Notice:
+          </div>
+          {gaData.error && <p className="text-xs text-amber-700 dark:text-amber-300">• GA4: {gaData.error}</p>}
+          {gscData.error && <p className="text-xs text-amber-700 dark:text-amber-300">• GSC: {gscData.error}</p>}
+        </div>
+      )}
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card className="border-indigo-100 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-900/10">
@@ -66,7 +67,7 @@ export default async function AnalyticsPage() {
             <Users className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{gaData.overview?.activeUsers}</div>
+            <div className="text-2xl font-bold">{gaData.overview?.activeUsers ?? 0}</div>
             <p className="text-xs text-slate-500">Active users in last 30 days</p>
           </CardContent>
         </Card>
@@ -77,7 +78,7 @@ export default async function AnalyticsPage() {
             <BarChart3 className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{gaData.overview?.pageViews}</div>
+            <div className="text-2xl font-bold">{gaData.overview?.pageViews ?? 0}</div>
             <p className="text-xs text-slate-500">Total screens/pages viewed</p>
           </CardContent>
         </Card>
@@ -88,7 +89,7 @@ export default async function AnalyticsPage() {
             <MousePointerClick className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{gscData.overview?.totalClicks}</div>
+            <div className="text-2xl font-bold">{gscData.overview?.totalClicks ?? 0}</div>
             <p className="text-xs text-slate-500">From Google Search</p>
           </CardContent>
         </Card>
@@ -99,7 +100,7 @@ export default async function AnalyticsPage() {
             <Activity className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{gscData.overview?.avgPosition}</div>
+            <div className="text-2xl font-bold">{gscData.overview?.avgPosition ?? '0.0'}</div>
             <p className="text-xs text-slate-500">Average ranking position</p>
           </CardContent>
         </Card>
@@ -110,7 +111,7 @@ export default async function AnalyticsPage() {
             <ListFilter className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{gscData.overview?.totalSubmitted}</div>
+            <div className="text-2xl font-bold">{gscData.overview?.totalSubmitted ?? 0}</div>
             <p className="text-xs text-slate-500">Submitted via Sitemaps</p>
           </CardContent>
         </Card>
